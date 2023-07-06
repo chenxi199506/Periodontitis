@@ -1,0 +1,3096 @@
+---
+title: "牙周炎和AD"
+author: "陈曦"
+date:  "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F,results = "hide",eval = F,warning=FALSE,message=FALSE)
+
+
+
+```
+
+# function
+
+```{r}
+
+mygo <- function(gene){
+
+  resultlist <- list()
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(stringr)
+library(ggplot2)
+library(enrichplot)
+library(DOSE)
+
+
+library(msigdbr)
+# m_df<- msigdbr(species = "Mus musculus",  category = "C2", subcategory = "KEGG")
+# 
+# resultlist[[2]]  <- enricher(gene, TERM2GENE =m_df[,c(3,4)])
+# 
+
+gene=bitr(gene,fromType="SYMBOL",toType="ENTREZID",OrgDb="org.Mm.eg.db") #���в��ֻ������ݶ�ʧ������ENSEMBL
+gene <- dplyr::distinct(gene,SYMBOL,.keep_all=TRUE)
+
+
+##go\
+resultlist[[1]]<- enrichGO(gene = gene$ENTREZID, OrgDb = org.Mm.eg.db,ont = "ALL", pvalueCutoff  = 0.5, qvalueCutoff  = 0.01,readable=T)  
+
+# 
+# 
+# 
+# 
+# for(i in 1:2){
+#   print(i)
+#   #p <- enrichplot::dotplot(resultlist[[i]], showCategory=10,orderBy = "x")
+#   p <- barplot()
+#   p <- p+ggtitle(figname)
+#   print(p)
+# 
+# }
+
+  return(resultlist[[1]])
+}
+
+source("../03拟时间分析//monocle3functionV1.R")
+source("function_subcluster.R")
+source("../01annotation/function_manual_annotation.R")
+stacked_bar_plot_v1 <- function(scRNA,x){
+  cell.prop<-as.data.frame(prop.table(table(x, scRNA$disease)))
+  colnames(cell.prop)<-c("cluster","patient","proportion")
+  #cell.prop$patient = factor(cell.prop$patient, levels=c("WT","P", "AD","ADP")) ## 设置柱条的顺序
+  P<- ggplot(cell.prop,aes(patient,proportion,fill=cluster))+
+    geom_bar(stat="identity",position="fill")+
+  #scale_fill_manual(values = c("#2f5688","#2b22a4","#CC0000"))+
+    ggtitle("")+
+    theme_bw()+
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+  return(P)
+}
+
+stacked_bar_plot_v2 <- function(scRNA,x){
+  cell.prop<-as.data.frame(prop.table(table(x, scRNA$disease)))
+  colnames(cell.prop)<-c("cluster","patient","proportion")
+#cell.prop$patient = factor(cell.prop$patient, levels=c("RA","Ctrl","AF")) ## 设置柱条的顺序
+
+ P<- ggplot(cell.prop,aes(cluster,proportion,fill=patient))+
+    geom_bar(stat="identity",position="fill")+
+  #scale_fill_manual(values = c("#2f5688", "#BBBBBB","#CC0000"))+
+    ggtitle("")+
+    theme_bw()+
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))+coord_flip()+
+	  theme(panel.grid.major=element_line(colour=NA),
+            panel.background = element_rect(fill = "transparent",colour = NA),
+            plot.background = element_rect(fill = "transparent",colour = NA),
+            panel.grid.minor = element_blank())
+ 
+   return(P)
+}
+
+stacked_bar_plot_v3 <- function(scRNA,x){
+  cell.prop<-as.data.frame(prop.table(table(x, scRNA$disease)))
+  colnames(cell.prop)<-c("cluster","patient","proportion")
+#cell.prop$patient = factor(cell.prop$patient, levels=c("Ctrl","AF")) ## 设置柱条的顺序
+
+ P<- ggplot(cell.prop,aes(cluster,proportion,fill=patient))+
+    geom_bar(stat="identity",position="fill")+
+  #scale_fill_manual(values = c("#619CFF","#F8766D", "#00BA38"))+
+    ggtitle("")+
+    theme_bw()+
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))+coord_flip()+
+	  theme(panel.grid.major=element_line(colour=NA),
+            panel.background = element_rect(fill = "transparent",colour = NA),
+            plot.background = element_rect(fill = "transparent",colour = NA),
+            panel.grid.minor = element_blank())
+ 
+   return(P)
+}
+
+stacked_bar_plot_v4 <- function(scRNA,x){
+  cell.prop<-as.data.frame(prop.table(table(x, scRNA$disease)))
+  colnames(cell.prop)<-c("cluster","patient","proportion")
+#cell.prop$patient = factor(cell.prop$patient, levels=c("RA","Ctrl","AF")) ## 设置柱条的顺序
+
+ P<- ggplot(cell.prop,aes(patient,proportion,fill=cluster))+
+    geom_bar(stat="identity",position="fill")+
+  #scale_fill_manual(values = c("#F8766D", "#00BA38","#619CFF"))+
+    ggtitle("")+
+    theme_bw()+
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))+coord_flip()+
+	  theme(panel.grid.major=element_line(colour=NA),
+            panel.background = element_rect(fill = "transparent",colour = NA),
+            plot.background = element_rect(fill = "transparent",colour = NA),
+            panel.grid.minor = element_blank())
+ 
+   return(P)
+}
+
+stacked_bar_plot_v5 <- function(scRNA,x){
+  cell.prop<-as.data.frame(prop.table(table(x, scRNA$disease)))
+  colnames(cell.prop)<-c("cluster","patient","proportion")
+#cell.prop$patient = factor(cell.prop$patient, levels=c("RA","Ctrl","AF")) ## 设置柱条的顺序
+
+ P<- ggplot(cell.prop,aes(patient,proportion,fill=cluster))+
+    geom_bar(stat="identity",position="fill")+
+  #scale_fill_manual(values = c("#F8766D", "#00BA38","#619CFF"))+
+    ggtitle("")+
+    theme_bw()+
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))+
+	  theme(panel.grid.major=element_line(colour=NA),
+            panel.background = element_rect(fill = "transparent",colour = NA),
+            plot.background = element_rect(fill = "transparent",colour = NA),
+            panel.grid.minor = element_blank())
+ 
+   return(P)
+}
+
+## 矫正分群总数后
+stacked_bar_plot_v6 <- function(Tcell,x){
+  cell.prop<-as.data.frame(prop.table(table(x, Tcell$disease)))
+  colnames(cell.prop)<-c("cluster","patient","proportion")
+  sumgroup <- cell.prop %>% dplyr::select_all() %>% group_by(patient) %>%  summarise(across(where(is.numeric), ~ sum(.x, na.rm=TRUE)))
+  group1 <- cell.prop %>% dplyr::select_all() %>%dplyr::filter(patient=="AF") %>% mutate(result=proportion/sumgroup$proportion[1])
+    group2 <- cell.prop %>% dplyr::select_all() %>%dplyr::filter(patient=="Ctrl") %>% mutate(result=proportion/sumgroup$proportion[2])
+      group3 <- cell.prop %>% dplyr::select_all() %>%dplyr::filter(patient=="RA") %>% mutate(result=proportion/sumgroup$proportion[3])
+      cell.prop <- rbind(group1,group2)
+      cell.prop<- rbind(cell.prop,group3)
+  
+cell.prop$patient = factor(cell.prop$patient, levels=c("RA","Ctrl","AF")) ## 设置柱条的顺序
+
+ P<- ggplot(cell.prop,aes(cluster,result,fill=patient))+
+    geom_bar(stat="identity",position="fill")+
+  scale_fill_manual(values = c("#2f5688", "#BBBBBB","#CC0000"))+
+    ggtitle("")+
+    theme_bw()+
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))+coord_flip()+
+	  theme(panel.grid.major=element_line(colour=NA),
+            panel.background = element_rect(fill = "transparent",colour = NA),
+            plot.background = element_rect(fill = "transparent",colour = NA),
+            panel.grid.minor = element_blank())
+ 
+   return(P)
+}
+
+
+stacked_bar_plot_v7 <- function(marrow,x){
+  cell.prop<-as.data.frame(prop.table(table(x, marrow$disease)))
+  colnames(cell.prop)<-c("cluster","patient","proportion")
+  sumgroup <- cell.prop %>% dplyr::select_all() %>% group_by(patient) %>%  summarise(across(where(is.numeric), ~ sum(.x, na.rm=TRUE)))
+  group1 <- cell.prop %>% dplyr::select_all() %>%dplyr::filter(patient=="AF") %>% mutate(result=proportion/sumgroup$proportion[1])
+    group2 <- cell.prop %>% dplyr::select_all() %>%dplyr::filter(patient=="Ctrl") %>% mutate(result=proportion/sumgroup$proportion[2])
+      group3 <- cell.prop %>% dplyr::select_all() %>%dplyr::filter(patient=="RA") %>% mutate(result=proportion/sumgroup$proportion[3])
+      cell.prop <- rbind(group1,group2)
+      cell.prop<- rbind(cell.prop,group3)
+  
+#cell.prop$patient = factor(cell.prop$patient, levels=c("RA","Ctrl","AF")) ## 设置柱条的顺序
+#cell.prop$patient = factor(cell.prop$cluster, levels=c("RA","Ctrl","AF")) ## 设置柱条的顺序
+
+ P<- ggplot(cell.prop,aes(patient,result,fill=cluster))+
+    geom_bar(stat="identity",position="fill")+
+  scale_fill_manual(values = c("#BBBBBB","#2f5688","#CC0000"))+
+    ggtitle("")+
+    theme_bw()+
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))+coord_flip()+
+	  theme(panel.grid.major=element_line(colour=NA),
+            panel.background = element_rect(fill = "transparent",colour = NA),
+            plot.background = element_rect(fill = "transparent",colour = NA),
+            panel.grid.minor = element_blank())
+ 
+   return(P)
+}
+
+
+```
+
+
+## 准备工作
+
+>参考文献：nature protocols https://doi.org/10.1038/s41596-021-00534-0
+Tutorial:guidelines for annotating single-cell transcriptomic maps using automated and manual methods 
+
+https://www-nature-com-443.webvpn.bjmu.edu.cn/articles/s41596-021-00534-0
+
+常规分组进行harmary去批次
+
+```{r}
+library(Seurat)
+
+samples=list.files("D:\\new desktop/牙周炎项目/rawdata/")  #
+samples
+dir <- file.path('D:\\new desktop//牙周炎项目/rawdata/',samples)#
+dir[1]
+dir
+i=1
+pbmc.data <- Read10X(data.dir = dir[1])
+AD1 <-CreateSeuratObject(counts =pbmc.data,min.features = 100)
+AD1@meta.data$disease <- c("AD")
+
+pbmc.data <- Read10X(data.dir = dir[2])
+ADP <-CreateSeuratObject(counts =pbmc.data,min.features = 100)
+ADP@meta.data$disease <- c("ADP")
+pbmc.data <- Read10X(data.dir = dir[3])
+P <-CreateSeuratObject(counts =pbmc.data,min.features = 100)
+P@meta.data$disease <- c("P")
+
+pbmc.data <- Read10X(data.dir = dir[4])
+WT <-CreateSeuratObject(counts =pbmc.data,min.features = 100)
+WT@meta.data$disease <- c("WT")
+
+
+ALL <- merge(AD1, y = c(ADP,P,WT))
+
+
+```
+ 
+Harmony
+
+
+
+```{r, echo=FALSE}
+library(harmony)
+scRNA_harmony <- ALL
+scRNA_harmony <- NormalizeData(scRNA_harmony) %>% FindVariableFeatures() %>% ScaleData() %>% RunPCA(verbose=FALSE)
+##整合
+table(scRNA_harmony@meta.data$disease)
+system.time({scRNA_harmony <- RunHarmony(scRNA_harmony, group.by.vars = "disease")})
+#   用户   系统   流逝 
+# 34.308  0.024 34.324
+#降维聚类
+scRNA_harmony <- RunUMAP(scRNA_harmony, reduction = "harmony", dims = 1:20)
+scRNA_harmony <- FindNeighbors(scRNA_harmony, reduction = "harmony", dims = 1:20) %>% FindClusters()
+##作图
+#group_by_cluster
+plot1 = DimPlot(scRNA_harmony, reduction = "umap", label=T) 
+#group_by_sample
+plot2 = DimPlot(scRNA_harmony, reduction = "umap", group.by='disease') 
+#combinate
+plotc <- plot1+plot2
+plotc
+#ggsave("scRNA_harmony.png", plot = plotc, width = 10, height = 5)
+saveRDS(scRNA_harmony, 'scRNA_harmony0719.rds')
+```
+
+
+```{r, echo=FALSE}
+matrix <- scRNA_harmony[["RNA"]]@counts
+write.csv(matrix,file = "expressmatrix.csv")
+nf <- as.data.frame(matrix[1:5,1:5])
+write.csv(matrix[,1:100],file = "expressmatrixtest.csv")
+matrix2 <- matrix[1:100,1:100]
+rownames(matrix2) <- toupper(rownames(matrix2))
+
+```
+
+singleR 注释作为辅助手段
+
+使用数据库 2个
+
+>ImmGenData the murine ImmGen (Heng et al. 2008) （鼠） 
+
+>MouseRNAseqData a collection of mouse data sets downloaded from GEO (Benayoun et al. 2019).鼠）
+
+最后确定第二个效果更好
+
+```{r}
+library(SingleR)
+ref1 <- ImmGenData() 
+ref2 <- MouseRNAseqData()
+refdatabase <- list()
+refdatabase[[1]] <- ref1
+refdatabase[[2]] <- ref2
+saveRDS(refdatabase,file = "Mouse_anotation_database_list.RDS")
+
+```
+
+
+
+## 分群参数确定
+```{r,fig.height=6,fig.width=12,eval=F,warning=FALSE}
+
+
+
+for(i in 1:10){
+  res <- i/10
+  dim_num <- c(1:20)
+  #print(paste("分群数量在",max(dim_num),"左右","分辨率=",res,"时的数据"))
+  figname <- paste("分群数量在",max(dim_num),"左右","分辨率=",res,"时的数据")
+  scRNA <- UMAP_harmony(scRNA,dim = dim_num,resolution = res)
+  UMAP_circle(scRNA,figname)
+  plot_umap(scRNA)
+  anotation_plot(scRNA)
+  print(i)
+}
+
+
+```
+
+
+
+```{r,fig.height=8,fig.width=6,result=F}
+
+library(clustree)
+sce <- FindClusters(
+  object = scRNA,
+  resolution = c(seq(.01,1.6,.05))
+)
+
+clustree(sce@meta.data, prefix = "RNA_snn_res.")
+
+```
+
+
+## 手动注释
+
+```{r}
+source("D:\\new desktop\\牙周炎项目\\01annotation/function_manual_annotation.R")
+min=0.01
+max=0.1
+step=0.01
+
+min=0.1
+max=1
+step=0.1
+genenum=3
+
+markerall <- import("D:\\new desktop/牙周炎项目/海马markergenes.xlsx")
+
+
+CellMarker <-markerall$`Cell Marker`
+CellMarkerdf1 <- markerall[,4:5]
+names(CellMarkerdf1) <- c("cellname","markergene")
+
+markerall <- import("D:\\new desktop/牙周炎项目/rawdata/小鼠脑的所有细胞marker.xlsx")
+
+CellMarker <-markerall$`Cell Marker`
+CellMarkerdf2 <- markerall[,4:5]
+names(CellMarkerdf2) <- c("cellname","markergene")
+
+
+```
+
+
+```{r}
+nsc3 <- percentagecaculation(scRNA,min,max,step,CellMarker,CellMarkerdf,genenum = 3)
+nsc5 <- percentagecaculation(scRNA,min,max,step,CellMarker,CellMarkerdf,genenum = 5)
+
+nsc1 <- percentagecaculation(scRNA,min,max,step,CellMarker,CellMarkerdf,genenum = 1)
+nsc2 <- percentagecaculation(scRNA,min,max,step,CellMarker,CellMarkerdf,genenum = 2)
+
+nsc5
+
+my_alldotplot(nsc5,CellMarkerdf)
+
+namepdf=paste0("从",min,"到",max,"步长",step,"的各种分辨率计算结果",Sys.Date(),".pdf")
+image <- clustree(nsc@meta.data, prefix = "RNA_snn_res.")
+ggsave(file=namepdf, plot=image, width=10, height=18)
+
+
+name4=paste0("从",min,"到",max,"步长",step,genenum,"基因的各种分辨率计算结果",Sys.Date(),".rds")
+saveRDS(nsc,file = name4)
+
+name5=paste0("从",min,"到",max,"步长",step,genenum,"基因的的各种分辨率计算结果",Sys.Date(),".csv")
+
+write.csv(nsc@tools$calcuresult,file = name5)
+
+```
+
+
+
+## dotplot 画图看各种分群的结果
+```{r,fig.height=8,fig.width=18,result=F}
+scRNA <- readRDS("从0.01到0.1步长0.013基因的各种分辨率计算结果2022-07-23.rds")
+nsc10 <- percentagecaculation(scRNA,0.1,0.1,0.1,CellMarker,CellMarkerdf,genenum = 10)
+scRNA <- nsc10
+Idents(scRNA)=scRNA$RNA_snn_res.0.1
+
+pic1 <- DimPlot(scRNA, group.by="celltype", label=F , reduction='umap')
+pic2 <-DimPlot(scRNA, label=F , reduction='umap')
+
+pic1|pic2
+
+CellMarkerdf <- CellMarkerdf2
+
+i=1
+    selectmarker <-  scRNA@tools$top10list[[i]]
+    selectCellMarkerdf <- CellMarkerdf%>% dplyr::select_all() %>% dplyr::filter(markergene %in%selectmarker$gene)
+    
+    selectCellMarkerdf=selectCellMarkerdf[!duplicated(selectCellMarkerdf$markergene),]
+    select_genes_all=split(selectCellMarkerdf$markergene,selectCellMarkerdf$cellname)
+    p1 <- DotPlot(object = scRNA, 
+            features=select_genes_all, 
+            assay = "RNA") + theme(axis.text.x = element_text(angle = 45, 
+                                                              vjust = 0.5, hjust=0.5))
+    p2<- DimPlot(scRNA, label=F , reduction='umap')
+    p1|p2
+```
+
+
+```{r,fig.height=8,fig.width=28,result=F}
+p1
+    
+```
+
+precursor cell 
+
+
+```{r,fig.height=8,fig.width=28,result=F}
+celltype=data.frame(ClusterID=0:11,
+                    celltype=0:11)   
+celltype[celltype$ClusterID %in% c( 7  ),2]='Microglial cell' 
+celltype[celltype$ClusterID %in% c( 3  ),2]='Oligodendrocyte'   
+celltype[celltype$ClusterID %in% c(  9 ),2]='Astrocyte' 
+celltype[celltype$ClusterID %in% c(  10 ),2]='Mural cell' 
+
+celltype[celltype$ClusterID %in% c(  8 ),2]='Oligodendrocyte precursor cell' 
+
+celltype[celltype$ClusterID %in% c(0,1,2,4,5,6,11),2]='Neurons'  
+
+for(i in 1:nrow(celltype)){
+  scRNA@meta.data[which(scRNA@meta.data$RNA_snn_res.0.1 == celltype$ClusterID[i]),'celltype'] <- celltype$celltype[i]}
+table(scRNA@meta.data$celltype)
+ 
+saveRDS(scRNA,file = "手动注释后scRNA0723.rds")
+
+```
+
+
+
+确定参数res选择0.1
+```{r,fig.height=8,fig.width=10,result=F}
+source("function_annotate.R")
+
+scRNA<- readRDS("scRNA_harmony0719.rds")
+  i=1
+  
+  res <- i/10
+  dim_num <- c(1:20)
+  #print(paste("分群数量在",max(dim_num),"左右","分辨率=",res,"时的数据"))
+  figname <- paste("分群数量在",max(dim_num),"左右","分辨率=",res,"时的数据")
+  scRNA <- UMAP_harmony(scRNA,dim = dim_num,resolution = res)
+  UMAP_circle(scRNA,figname)
+```
+画图
+
+```{r,fig.height=8,fig.width=18,result=F}
+plot_umap(scRNA)
+#scRNA <- anotation_plot(scRNA)
+  #print(i)
+refdata2<-refdatabase[[2]]
+    testdata <- GetAssayData(scRNA, slot="data")
+    clusters <- scRNA@meta.data$seurat_clusters
+    cellpred <- SingleR(test = testdata, ref = refdata2, labels = refdata2$label.fine, 
+                        # label.fine耗时比较长一点
+                        #method = "cluster", 
+                        clusters = clusters, 
+                        assay.type.test = "logcounts", assay.type.ref = "logcounts")
+    celltype = data.frame(ClusterID=rownames(cellpred), celltype=cellpred$labels, stringsAsFactors = F)
+    #knitr::kable(celltype,caption="细胞类型")
+    scRNA@meta.data$celltype = "NA"
+    for(i in 1:nrow(celltype)){
+      scRNA@meta.data[which(scRNA@meta.data$seurat_clusters == celltype$ClusterID[i]),'celltype'] <- celltype$celltype[i]}
+    pic1 <- DimPlot(scRNA, group.by="celltype", label=F , reduction='umap')
+    pic2 <-stacked_bar_plot_celltype(scRNA)
+    pic <- pic1+pic2
+    print(pic)
+
+cell.prop<-as.data.frame(prop.table(table(scRNA$disease, scRNA$celltype)))
+  colnames(cell.prop)<-c("cluster","patient","proportion")
+write.csv(cell.prop,file = "比例.csv")
+
+saveRDS(scRNA,file = "scRNA_harmony_res0.1_singleR0720.rds")
+```
+
+
+
+
+# figure 1 整体图谱
+```{r,fig.height=2,fig.width=3,result="hide",eval=TRUE,warning=FALSE,message=FALSE}
+source("function_annotate.R")
+
+#scRNA<- readRDS("scRNA_harmony_res0.1_singleR0720.rds")
+scRNA<- readRDS("手动注释后scRNA0723.rds")
+cellnum <- as.data.frame(table(scRNA$disease,scRNA$celltype))
+write.csv(cellnum,file = "不同细胞数量.csv")
+sum(cellnum$Freq)
+scRNA@meta.data$disease <- gsub("WT","Ctrl",scRNA@meta.data$disease )
+Idents(scRNA)="disease"
+Idents(scRNA)=factor(Idents(scRNA), levels= c("Ctrl","P","AD","ADP"))
+DimPlot(scRNA, group.by="celltype", label=F , reduction='umap')
+DimPlot(scRNA, label=F , reduction='umap')
+DimPlot(scRNA, group.by="disease", label=F , reduction='umap',split.by = "disease")
+
+
+stacked_bar_plot_v1(scRNA,scRNA$RNA_snn_res.0.1)
+stacked_bar_plot_v1(scRNA,scRNA$celltype)
+
+table(scRNA$disease)
+
+```
+
+
+```{r,eval=TRUE,fig.height=2,fig.width=10,result="hide"}
+DimPlot(scRNA, group.by="celltype", label=F ,split.by = "disease", reduction='umap')
+
+DimPlot(scRNA, group.by="disease", label=F ,split.by = "disease", reduction='umap')
+
+
+```
+
+
+## 00 feature plot
+
+```{r}
+genes <- import("featureplot/粗分基因.xlsx")
+mk <- genes$markergene
+expr <- FetchData(object = scRNA, vars = mk)
+expr <-AverageExpression(scRNA,features = mk,group.by = "disease")
+write.csv(expr,file = "markergene.csv")
+for(i in 1:length(genes$markergene)){
+  
+  image <-FeaturePlot(scRNA,features=genes$markergene[i])
+  namepdf=paste0(genes$markergene[i],"基因结果",Sys.Date(),".png")
+  #image <- DoHeatmap(Neurons, features = df$gene) + NoLegend()
+  ggsave(file=namepdf, plot=image, width=6, height=5)
+  print(i)
+}
+```
+```{r}
+NSC <- c("Aldoc","Apoe","Id4","Hopx","Sox9","GFAP","Scl1a3","GLAST","Sox2")
+pNSC <- c("Eomes","Neurod1","Dcx", "Ccnd2")
+FeaturePlot(scRNA,features=pNSC)
+```
+
+
+## 00 图谱
+```{r,fig.height=5,fig.width=12,eval=TRUE}
+plot_umap(scRNA)
+```
+
+## 01累计柱状图，每个细胞类型比例  ，限定顺序
+```{r,eval=TRUE}
+#detach("package:reticulate")
+cell.prop<-as.data.frame(prop.table(table(scRNA$disease, scRNA$celltype)))
+colnames(cell.prop)<-c("cluster","patient","proportion")
+#write.csv(cell.prop,file = "比例2.csv")
+
+
+data <- import("比例2.xlsx")
+data$cluster <- gsub("WT","Ctrl",data$cluster)
+mydata <- data[1:24,c(2,3,5)]
+names(mydata) <- c("disease","celltype","freq")
+ mydata$disease = factor(mydata$disease, levels=c("Ctrl","P", "AD","ADP")) ## 设置柱条的顺序
+```
+
+
+```{r,eval=TRUE,results='hold'}
+cellnum2 <- as.data.frame((table(scRNA$disease, scRNA$celltype)))
+cell.prop2<-as.data.frame(prop.table(table(scRNA$disease, scRNA$celltype)))
+cell.prop2$count <- cellnum2$Freq
+colnames(cell.prop2)<-c("cluster","patient","proportion","count")
+
+#knitr::kable(cell.prop2)
+ 
+ggplot(mydata,aes(celltype,freq,fill=disease))+
+geom_bar(stat="identity",position="dodge") +ggtitle("分组柱状图")+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+```
+
+## 02 普通分面分组柱状图
+```{r,,fig.height=4,fig.width=16,eval=TRUE}
+cellnameall <- unique(mydata$celltype)
+library(ggpubr)
+plotlist <- list()
+for(i in 1:length(cellnameall)){
+  cellname <- cellnameall[i]
+  df <- mydata %>% select_all() %>% dplyr::filter(celltype==cellname)
+  plotlist[[i]] <-  ggplot(df,aes(celltype,freq,fill=disease))+
+   geom_bar(stat="identity",position="dodge") +ggtitle(cellname)+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+   #+stat_compare_means(aes(group = disease,label = ..p.signif..),method = "kruskal.test")
+  }
+
+print(plotlist[[1]]|plotlist[[2]]|plotlist[[3]]|plotlist[[4]]|plotlist[[5]]|plotlist[[6]])
+write.csv(mydata,file = "1128重做细胞比例表格.csv")
+```
+
+## 03 显著性检验画图
+```{r,,fig.height=4,fig.width=12,eval=TRUE}
+mydata$pvalue=c()
+dfall=c()
+for(j in 1:length(cellname)){
+    cellname <- cellnameall[j]
+    df <- mydata %>% select_all() %>% dplyr::filter(celltype==cellname)
+for(i in 1:4){
+  print(i)
+  result <- as.data.frame(unlist(t.test(df[-i,3],mu=df[i,3])))
+  p <- as.numeric(result[3,1])
+  df$pvalue[i] <- abs(p-0.05)
+}
+  dfall <- rbind(dfall,df)
+}
+
+write.csv(dfall,file = "显著性检验.csv")
+#knitr::kable(dfall)
+```
+
+
+```{r,eval=TRUE}
+plotlist[[1]]+
+  geom_signif(data=df,
+              aes(xmin=0.75, xmax=1.25, annotations="*", y_position=0.05),
+              textsize = 5, vjust = 0.05, tip_length = c(0.04, 0.2),
+              manual=TRUE)
+
+plotlist[[2]]+
+   geom_signif(data=df,
+              aes(xmin=0.88, xmax=1.33, annotations="*", y_position=0.08),
+              textsize = 5, vjust = 0.05, tip_length = c(0.4, 0.3),
+              manual=TRUE)+
+  geom_segment(aes(x = 0.65, y = 0.064, xend = 1.15, yend = 0.064))
+
+```
+
+
+## 04差异基因热图
+
+
+```{r}
+library(dplyr)
+library(future)
+#scRNA<- readRDS("scRNA_harmony_res0.1_singleR0720.rds")
+plan("multiprocess", workers = 16)
+pbmc.markers <- FindAllMarkers(scRNA, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+scRNA@tools$pbmc.markers <- pbmc.markers 
+pbmc.markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_log2FC)
+top10 <- pbmc.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_log2FC)
+#write.csv(pbmc.markers,file="marker 0.4.csv")
+knitr::kable(top10,caption="top10列表")
+scRNA@tools$top10 <- top10 
+Heatmap <- DoHeatmap(scRNA, features = top10$gene) + NoLegend()
+scRNA@tools$Heatmap <- Heatmap
+scRNA@tools$Heatmap
+saveRDS(scRNA,file = "scRNA_harmony_res0.1_single_allmarker0720.rds",compress = F)
+
+```
+
+
+```{r,fig.height=18,fig.width=6,result="hide",eval=T}
+#scRNA <- readRDS("scRNA_harmony_res0.1_single_allmarker0720.rds")
+#https://www.jianshu.com/p/eb8548cf73c4
+
+#scRNA$celltype <- factor(x = scRNA$celltype, levels = c('Neurons','Astrocytes','Oligodendrocytes','Microglia'))  
+
+
+top10 <- scRNA@tools$top10list[[1]]
+DoHeatmap(scRNA,   
+          features = as.character(unique(top10$gene)),   
+          group.by = "celltype",  
+          assay = "RNA",  
+          group.colors = c("#C77CFF","#7CAE00","#00BFC4","#F8766D","#AB82FF","#90EE90","#00CD00","#008B8B"))+  #设置组别颜色
+  scale_fill_gradientn(colors = c("navy","white","firebrick3"))
+
+Idents(scRNA)="celltype"
+subobj <- subset(scRNA, downsample = 300)
+#subobj$celltype <- factor(x = subobj$celltype, levels = c('Neurons','Astrocytes','Microglia','Oligodendrocytes'))  
+
+DoHeatmap(subobj,   
+          features = as.character(unique(top10$gene)),   
+          group.by = "celltype",  
+          assay = "RNA",  
+          group.colors = c("#C77CFF","#7CAE00","#00BFC4","#F8766D","#AB82FF","#90EE90","#00CD00","#008B8B"))+  #设置组别颜色
+  scale_fill_gradientn(colors = c("navy","white","firebrick3"))
+
+
+```
+
+
+## 05 数据库marker基因热图和气泡图
+
+> CellMarker提供了海马标志物 http://yikedaxue.slwshop.cn/search.php?quickSearchInfo=Astrocytes#framekuang
+
+```{r,,fig.height=8,fig.width=6,eval=TRUE}
+markerall <- import("D:\\new desktop/牙周炎项目/rawdata/小鼠脑的所有细胞marker.xlsx")
+
+#markerall <- import("海马markergenes.xlsx")
+#table(markerall$Cellname)
+#Neuron <- markerall %>% dplyr::select(Cellname,CellMarker) %>% dplyr::filter(Cellname=="Neuron")
+#Neuron <- Neuron$CellMarker
+#DimPlot(scRNA, group.by="RNA_snn_res.0.1", label=F , reduction='umap')
+
+selectmarker <-  scRNA@tools$top10list[[1]]
+crossgene <- intersect(markerall$`Cell Marker`,selectmarker$gene)
+
+selectmarker <- selectmarker%>% dplyr::select_all() %>% dplyr::filter(gene %in%crossgene)
+
+DoHeatmap(subobj,   
+          features = as.character(unique(c(selectmarker$gene))),   
+          group.by = "celltype",  
+          assay = "RNA",  
+          group.colors = c("#C77CFF","#7CAE00","#00BFC4","#F8766D","#AB82FF","#90EE90","#00CD00","#008B8B"))+  #设置组别颜色
+  scale_fill_gradientn(colors = c("navy","white","firebrick3"))
+```
+
+
+```{r,,fig.height=4,fig.width=16,eval=F}
+CellMarker <-markerall$`Cell Marker`
+CellMarkerdf<- markerall[,4:5]
+names(CellMarkerdf) <- c("cellname","markergene")
+    #selectmarker <-  scRNA@tools$top10list[[]]
+    selectCellMarkerdf <- CellMarkerdf%>% dplyr::select_all() %>% dplyr::filter(markergene %in%selectmarker$gene)%>% dplyr::filter(cellname %in%cellnameall)
+    
+    selectCellMarkerdf=selectCellMarkerdf[!duplicated(selectCellMarkerdf$markergene),]
+    
+    write.csv(selectCellMarkerdf,file = "注释基因2.CSV")
+    
+```
+
+
+```{r,,fig.height=4,fig.width=16,eval=TRUE}
+
+selectCellMarkerdf <- read.csv("注释基因.CSV")
+
+
+select_genes_all=split(selectCellMarkerdf$markergene,selectCellMarkerdf$cellname)
+     DotPlot(object = scRNA, 
+            features=select_genes_all, 
+            assay = "RNA") + theme(axis.text.x = element_text(angle = 45, 
+                                                              vjust = 0.5, hjust=0.5))
+
+
+
+
+```
+## 06 MARKER基因展示
+
+```{r,fig.height=100,fig.width=40,result="hide",eval=T}
+FeaturePlot(object = scRNA, features =selectmarker$gene)
+
+```
+
+## 07 细胞周期分析
+
+构造函数
+
+```{r}
+
+my_cicle <- function(scRNA,name){
+marrow <- scRNA
+s.genes <- cc.genes$s.genes
+g2m.genes <- cc.genes$g2m.genes
+marrow <- CellCycleScoring(marrow, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
+#RidgePlot(marrow, features = c("PCNA", "TOP2A", "MCM6", "MKI67"), ncol = 2)
+#marrow <- RunPCA(marrow, features = c(s.genes, g2m.genes))
+P <- DimPlot(marrow)
+print(P)
+marrow$Phase
+p2 <- stacked_bar_plot_v1(marrow,marrow$Phase)+ggtitle(name)
+print(p2)
+p2 <- stacked_bar_plot_v2(marrow,marrow$Phase)+ggtitle(name)
+print(p2)
+#p2 <- stacked_bar_plot_v6(marrow,marrow$Phase)+ggtitle(name)
+#print(p2)
+#p2 <- stacked_bar_plot_v7(marrow,marrow$Phase)+ggtitle(name)
+#print(p2)
+return(marrow)
+}
+
+marrow <- my_cicle(scRNA,"ALL")
+```
+
+
+```{r}
+
+scRNA <- my_cicle(scRNA,"ALL")
+cellnameall <- unique(scRNA$celltype)
+for(i in 1:length(cellnameall)){
+  #Idents(scRNA)="celltype"
+  subsc <- subset(scRNA,celltype==cellnameall[i])
+  pp <- my_cicle(subsc,cellnameall[i])
+  print(i)
+  print(pp)
+}
+
+
+
+```
+
+08 
+
+
+
+# 不同组差异基因
+
+###### 构造差异基因计算函数
+
+
+```{r}
+# 
+library(pheatmap)
+
+
+my_dif <- function(scRNA,logFC=1){
+  Idents(scRNA)="celltype"
+  markerslist_AD_ADP <- list()
+  markerslist_P_WT <- list()
+  markerslist_AD_WT <- list()
+  markerslist_cross_AD_ADP_and_P_WT <- list()
+  
+  cellnameall <- unique(as.character(scRNA$celltype))
+  
+  for(i in 1:length(cellnameall)){
+    markerslist_AD_ADP[[i]] <- FindMarkers(scRNA, ident.1 = "ADP", ident.2  = "AD",group.by = "disease",subset.ident = cellnameall[i],logfc.threshold = logFC)
+
+     markerslist_P_WT[[i]] <- FindMarkers(scRNA, ident.1 = "P", ident.2  = "WT",group.by = "disease",subset.ident = cellnameall[i],logfc.threshold = logFC)
+     
+     markerslist_AD_WT[[i]] <- FindMarkers(scRNA, ident.1 = "AD", ident.2  = "WT",group.by = "disease",subset.ident = cellnameall[i],logfc.threshold = logFC)
+     
+     crossgene <- intersect(rownames(markerslist_AD_ADP[[i]]),rownames(markerslist_P_WT[[i]])) 
+     
+    markerslist_cross_AD_ADP_and_P_WT[[i]] <-cbind(markerslist_AD_ADP[[i]][crossgene,],markerslist_P_WT[[i]][crossgene,]) 
+      
+    print(i)
+  }
+  all_list <- list(markerslist_AD_ADP,markerslist_P_WT,markerslist_AD_WT,markerslist_cross_AD_ADP_and_P_WT)
+  scRNA@tools$all_markerslist<- all_list
+  
+  return(scRNA)
+  
+}
+
+nsc <- my_dif(scRNA,logFC=1)
+ls <- nsc@tools$all_markerslist
+saveRDS(ls,file = "全部差异基因.rds")
+
+```
+
+
+```{r}
+DoHeatmap()
+
+gene_features <- degdf %>%dplyr::select_all() %>% dplyr::filter(abs(avg_log2FC)>2)
+mat<- as.data.frame(AverageExpression(Microgia)[[1]])## 取均值
+mat <- log2(mat + 1)
+heatdata <- mat[rownames(gene_features),]
+heatdata<-na.omit(heatdata)
+
+annotation_col <- as.data.frame(colnames(heatdata))
+rownames(annotation_col) <- colnames(heatdata)
+
+#如果注释出界，可以通过调整格子比例和字体修正
+pheatmap(heatdata, #热图的数据
+         cluster_rows = F,#行聚类
+         cluster_cols = F,#列聚类，可以看出样本之间的区分度
+         annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = F,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100))
+
+
+```
+
+
+
+
+# 拟时间分析
+
+## monocle2
+
+*Astrocytes*
+
+*Microglia cell*
+
+*Mural cell*
+
+*Neurons*
+
+*Oligodendrocytes*
+
+*Oligodendrocyte precursor cell*
+
+
+
+
+```{r,fig.height=3,fig.width=6,result=F,eval=F}
+
+source("monocle2function.R")
+for(i in 1:length(cellnameall)){
+  sample=cellnameall[i]
+#res=1
+name <- paste0("D:\\new desktop\\牙周炎项目\\02subcluster\\",sample,"_harmony",Sys.Date(),".rds")
+subcluster <- readRDS(name)
+monocle2cds <- mymonocle2(subcluster) #monocle2function.R
+## test
+#monocle2cds <-mymonocle2(scRNA.Osteoclastic)
+ 
+p1 <- plot_cell_trajectory(monocle2cds, color_by = "seurat_clusters")
+#p2 <- plot_cell_trajectory(monocle2cds, color_by = "State")
+p3 <- plot_cell_trajectory(monocle2cds, color_by = "Pseudotime")
+print(p1|p3)
+  
+  
+}
+```
+
+## monocle3
+
+```{r,eval=F}
+source("monocle3function.R")
+source("function_subcluster.R")
+#detach("package:monocle")
+```
+
+
+```{r,fig.height=4,fig.width=6,result=F,eval=F}
+
+#cellnameall <- c("Astrocytes","Microglia","Neurons" ,"Oligodendrocytes")
+
+for(i in 1:length(cellnameall)){
+  
+sample=cellnameall[i]
+#res=1
+name <- paste0("D:\\new desktop\\牙周炎项目\\02subcluster\\",sample,"_harmony",Sys.Date(),".rds")
+subcluster <- readRDS(name)
+
+newcds <- my_monocle3(subcluster)
+
+p1 <-plot_cells(newcds,
+           color_cells_by = "pseudotime",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,
+           graph_label_size=1.5,
+           group_label_size=4,cell_size=1.5)
+
+#p1 <- plot_cells(newcds, color_cells_by="disease")
+p2 <- plot_cells(newcds, color_cells_by="orig.ident",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)
+p3 <- plot_cells(newcds, color_cells_by="celltype",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)
+p4 <- plot_cells(newcds, color_cells_by="disease",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)
+
+print((p1|p2)/(p3|p4))
+}
+
+```
+
+
+# 亚群细分
+
+
+```{r}
+source("D:\\new desktop\\牙周炎项目\\01annotation/function_manual_annotation.R")
+scRNA<- readRDS("手动注释后scRNA0723.rds")
+#res=1
+name <- paste0("D:\\new desktop\\牙周炎项目\\02subcluster\\Neurons_harmony2022-07-23.rds")
+subcluster <- readRDS(name)
+
+
+
+#构造函数 输出不同分群的marker gene
+reslist <- c(seq(0.01,0.1,0.01))
+Neurons <- findalltop_v1(subcluster,reslist,10)
+
+for(i in 1:length(Neurons@tools$top10list)){
+  res=reslist[i]
+  name=paste0(res,"的Neurons分辨率下的分群结果",Sys.Date(),".csv")
+  df <- Neurons@tools$top10list[[i]]
+  write.csv(df,file = name)
+  #namepdf=paste0(res,"的Neurons分辨率下的分群结果",Sys.Date(),".pdf")
+  #image <- DoHeatmap(Neurons, features = df$gene) + NoLegend()
+  #ggsave(file=namepdf, plot=image, width=10, height=28)
+  print(i)
+}
+
+```
+
+
+
+# figure 2 小胶质细胞亚群细分分析
+
+res=0.25 
+
+
+
+>参考文献：Microglia in Alzheimer’s disease at single-cell level. Are there common patterns in humans and mice?
+
+```{r,fig.height=4,fig.width=16}
+Microgia <- readRDS("I:\\BaiduSyncdisk/\\01牙周炎项目\\02subcluster\\Microglial cell_harmony2022-07-23.rds")
+reslist <- c(seq(0.2,0.25,0.01))
+Microgia <- findalltop_v1(Microgia,reslist,10)
+
+for(i in 1:length(Microgia@tools$top10list)){
+  res=reslist[i]
+  name=paste0(res,"的Microgia分辨率下的分群结果",Sys.Date(),".csv")
+  df <- Microgia@tools$top10list[[i]]
+  write.csv(df,file = name)
+  #namepdf=paste0(res,"的Microgia分辨率下的分群结果",Sys.Date(),".pdf")
+  #image <- DoHeatmap(Microgia, features = df$gene) + NoLegend()
+  #ggsave(file=namepdf, plot=image, width=10, height=28)
+  print(i)
+}
+
+
+CellMarkerdf3 <- import("I:\\BaiduSyncdisk/牙周炎项目\\小胶质细胞.xlsx")
+names(CellMarkerdf3) <- c("cellname","markergene")
+
+my_alldotplot(Microgia,CellMarkerdf3,0.2,0.5,0.05)
+
+
+```
+
+测试结论：res=1.1   9群最好 
+
+
+```{r,fig.height=4,fig.width=16}
+
+reslist <- c(seq(1.1,1.1,0.1))
+Microgia <- findalltop_v1(Microgia,reslist,10)
+my_alldotplot(Microgia,CellMarkerdf3,1.1,1.1,0.1)
+
+
+Microgia$RNA_snn_res.1.1
+Idents(Microgia) <- "RNA_snn_res.1.1"
+
+Microgia$celltype
+
+celltable <- import("clipboard")
+
+for(i in 1:nrow(celltype)){
+  Microgia@meta.data[which(Microgia@meta.data$RNA_snn_res.1.1 == celltype$ClusterID[i]),'celltype'] <- celltype$celltype[i]}
+table(Microgia@meta.data$celltype)
+ 
+
+name=paste0("Microgia_res=1.1注释结果",Sys.Date(),".rds")
+
+
+saveRDS(Microgia,name)
+
+saveRDS(Microgia,"Microgia_res=1.1注释结果2022-07-24.rds")
+
+
+```
+
+
+## 00 重新尝试手动注释
+
+```{r,fig.height=6,fig.width=6,result="hide"}
+
+CellMarkerdf3 <- import("I:\\BaiduSyncdisk/牙周炎项目\\小胶质细胞.xlsx")
+CellMarkerdf4 <- CellMarkerdf3$markergene[18:43]
+FeaturePlot(Microgia, features = CellMarkerdf4)
+  
+for (i in 18:43) {
+  pp <- FeaturePlot(Microgia, features = CellMarkerdf3$markergene[[i]])
+  
+  print(pp)
+  
+}
+```
+
+
+
+## 01分群结果图
+
+```{r,fig.height=4,fig.width=6,result="hide",eval=TRUE}
+Microgia <- readRDS("Microgia_res=1.1注释结果2022-07-24.rds")
+Microgia@meta.data$disease <- gsub("WT","Ctrl",Microgia@meta.data$disease )
+DimPlot(Microgia, label=T , reduction='umap')
+DimPlot(Microgia, group.by="celltype", label=F , reduction='umap')
+```
+
+
+```{r,fig.height=2,fig.width=6,result="hide",eval=TRUE}
+DimPlot(Microgia, group.by="celltype", label=F ,split.by="disease", reduction='umap')
+
+p1 <- DimPlot(Microgia, group.by="disease", label=F ,split.by="disease", reduction='umap')
+
+```
+
+```{r}
+gene <- c("Trem2", "Tyrobp", "Clec7a","Itgax","Spp1","Ctsd")
+Idents(Microgia)="disease"
+VlnPlot(object = Microgia, features = gene, stack=T, sort=T)
+
+
+```
+	CTRL	P	AD	ADP
+Trem2	4.043499	2.659225	17.25028	23.77601
+Trrobp	0	1.682768	3.16862	3.970068
+clec7a	0	0	1.043351	1.092657
+itgax	0	0	0	1.024275
+spp1	0	0	2.132303	2.229808
+ctsd	0	0	0	2.863752
+
+	CTRL	P	AD	ADP
+Trem2	4.043498945	2.659224656	17.25027562	23.77600676
+Apoe	96.08698446	28.68975464	220.281307	161.4698208
+Cyp2j6	0	0	0	1.02976
+
+
+```{r,result="hide"}
+library(rio)
+heatdata <- import("clipboard")
+library(pheatmap)
+#如果注释出界，可以通过调整格子比例和字体修正
+pheatmap(heatdata, #热图的数据
+         cluster_rows = TRUE,#行聚类
+         cluster_cols = TRUE,#列聚类，可以看出样本之间的区分度
+         #annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = T,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100))
+
+```
+
+
+## 02注释marker gene
+
+```{r,fig.height=2.4,fig.width=9,result="hide",eval=TRUE}
+CellMarkerdf <- import("D:\\new desktop\\牙周炎项目\\小胶质细胞.xlsx")
+names(CellMarkerdf) <- c("cellname","markergene")
+
+selectmarker <-  Microgia@tools$top10list[[1]]
+selectCellMarkerdf <- CellMarkerdf%>% dplyr::select_all() %>% dplyr::filter(markergene %in%selectmarker$gene)
+
+selectCellMarkerdf=selectCellMarkerdf[!duplicated(selectCellMarkerdf$markergene),]
+select_genes_all=split(selectCellMarkerdf$markergene,selectCellMarkerdf$cellname)
+
+Idents(Microgia) <- "celltype"
+DotPlot(object = Microgia, 
+              features=select_genes_all, 
+              assay = "RNA") + theme(axis.text.x = element_text(angle = 45, 
+                                                                vjust = 0.5, hjust=0.5))
+```
+
+## 03累及柱状图
+```{r,fig.height=2.4,fig.width=4,result="hide",eval=TRUE}
+stacked_bar_plot_v1(Microgia,Microgia$RNA_snn_res.1.1)
+stacked_bar_plot_v1(Microgia,Microgia$subcelltype)
+
+stacked_bar_plot_v1 <- function(scRNA,x){
+  cell.prop<-as.data.frame(prop.table(table(x, scRNA$disease)))
+  colnames(cell.prop)<-c("cluster","patient","proportion")
+  #cell.prop$patient = factor(cell.prop$patient, levels=c("WT","P", "AD","ADP")) ## 设置柱条的顺序
+  P<- ggplot(cell.prop,aes(patient,proportion,fill=cluster))+
+    geom_bar(stat="identity",position="fill")+
+  #scale_fill_manual(values = c("#2f5688","#2b22a4","#CC0000"))+
+    ggtitle("")+
+    theme_bw()+
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))+
+    ggsci::scale_fill_jama()
+  return(P)
+}
+stacked_bar_plot_v1(Microgia,Microgia$subcelltype)
+
+```
+
+
+
+
+## 04 分组柱状图{.tabset}
+
+### 各类小胶质细胞占小胶质细胞的比例
+
+```{r,fig.height=2.4,fig.width=4,eval=TRUE}
+cellnum <- as.data.frame((table(Microgia$disease, Microgia$celltype)))
+cell.prop<-as.data.frame(prop.table(table(Microgia$disease, Microgia$celltype)))
+cell.prop$count <- cellnum$Freq
+
+colnames(cell.prop)<-c("cluster","patient","proportion","count")
+#write.csv(cell.prop,file = "比例2.csv")
+i=1
+mydata <- c()
+groupname <- unique(as.character(cell.prop$cluster))
+for(i in 1:length(groupname)){
+subgroup <- cell.prop %>% dplyr::select_all() %>% dplyr::filter(cluster==groupname[i])
+subgroup$Freq <-subgroup$proportion/ sum(subgroup$proportion)
+mydata <- rbind(mydata,subgroup)
+  print(i)
+  
+}
+
+
+
+names(mydata) <- c("disease","celltype","prop","count","freq")
+ mydata$disease = factor(mydata$disease, levels=c("Ctrl","P", "AD","ADP")) ## 设置柱条的顺序
+
+ggplot(mydata,aes(celltype,freq,fill=disease))+
+geom_bar(stat="identity",position="dodge") +ggtitle("分组柱状图")+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+```
+
+
+```{r,fig.height=2.4,fig.width=4,results='hold',eval=TRUE}
+knitr::kable(mydata)
+```
+
+
+
+```{r,,fig.height=4,fig.width=16,eval=TRUE}
+cellnameall <- unique(mydata$celltype)
+library(ggpubr)
+plotlist <- list()
+for(i in 1:length(cellnameall)){
+  cellname <- cellnameall[i]
+  df <- mydata %>% select_all() %>% dplyr::filter(celltype==cellname)
+  plotlist[[i]] <-  ggplot(df,aes(celltype,freq,fill=disease))+
+   geom_bar(stat="identity",position="dodge") +ggtitle(cellname)+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+   #+stat_compare_means(aes(group = disease,label = ..p.signif..),method = "kruskal.test")
+  }
+
+print(plotlist[[1]]|plotlist[[2]]|plotlist[[3]])
+```
+
+### 各类小胶质细胞占总体细胞的比例
+
+
+```{r,fig.height=2.4,fig.width=4,result="hide",eval=TRUE}
+
+cellnum2 <- as.data.frame((table(scRNA$disease, scRNA$celltype)))
+cell.prop2<-as.data.frame(prop.table(table(scRNA$disease, scRNA$celltype)))
+cell.prop2$count <- cellnum2$Freq
+colnames(cell.prop2)<-c("cluster","patient","proportion","count")
+
+
+
+
+cell.prop<-as.data.frame(prop.table(table(Microgia$disease, Microgia$celltype)))
+cell.prop$count <- cellnum$Freq
+colnames(cell.prop)<-c("cluster","patient","proportion","count")
+#write.csv(cell.prop,file = "比例2.csv")
+i=1
+mydata <- c()
+groupname <- unique(as.character(cell.prop$cluster))
+for(i in 1:length(groupname)){
+allgroup <- cell.prop2 %>% dplyr::select_all() %>% dplyr::filter(cluster==groupname[i])## 整体的细胞数量统计
+  
+subgroup <- cell.prop %>% dplyr::select_all() %>% dplyr::filter(cluster==groupname[i])
+subgroup$Freq <-subgroup$count/ sum(allgroup$count)
+mydata <- rbind(mydata,subgroup)
+  print(i)
+  
+}
+
+
+names(mydata) <- c("disease","celltype","prop","count","freq")
+ mydata$disease = factor(mydata$disease, levels=c("Ctrl","P", "AD","ADP")) ## 设置柱条的顺序
+
+ggplot(mydata,aes(celltype,freq,fill=disease))+
+geom_bar(stat="identity",position="dodge") +ggtitle("分组柱状图")+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+
+```
+
+
+
+```{r,,eval=TRUE}
+cellnameall <- unique(mydata$celltype)
+library(ggpubr)
+plotlist <- list()
+for(i in 1:length(cellnameall)){
+  cellname <-as.character(cellnameall[i]) 
+  df <- mydata %>% dplyr::select_all() %>% dplyr::filter(celltype==cellname)
+  plotlist[[i]] <-  ggplot(df,aes(celltype,freq,fill=disease))+
+   geom_bar(stat="identity",position="dodge") +ggtitle(cellname)+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+  print(i)
+   print(plotlist[[i]] )
+  }
+```
+
+
+```{r,,fig.height=4,fig.width=16,eval=TRUE}
+print(plotlist[[1]]|plotlist[[2]]|plotlist[[3]]|plotlist[[4]]|plotlist[[5]]|plotlist[[6]]|plotlist[[7]])
+```
+
+
+## 05  小胶质细胞不同种类的差异 gene 热图{.tabset}
+
+
+### 5-1普通Heatmap 
+
+缺失值太多，不好看
+
+```{r,results='hold',eval=TRUE}
+
+library(pheatmap)
+Idents(Microgia)="celltype"
+degdf <- FindAllMarkers(Microgia, logfc.threshold = 2,group.by = "celltype")
+#degdf <- FindMarkers(Microgia,ident.1 = "DAM",ident.2 = "homeostatic microglia", logfc.threshold = 0.3,group.by = "celltype")
+#top10 <- degdf %>% top_n(n = 10, wt = avg_log2FC)
+
+knitr::kable(degdf)
+
+
+subobj <- subset(Microgia, downsample = 40)
+DoHeatmap(subobj, features = degdf$gene,group.by = "celltype")
+```
+### 5-2  取均值重新做Heatmap
+
+```{r,fig.height=8,fig.width=6,result="hide",eval=T}
+##不成功的heatmap 缺失值太多 取均值
+
+#help(package='Seurat')
+gene_features <- degdf %>%dplyr::select_all() %>% dplyr::filter(abs(avg_log2FC)>2)
+mat<- as.data.frame(AverageExpression(Microgia)[[1]])## 取均值
+mat <- log2(mat + 1)
+heatdata <- mat[rownames(gene_features),]
+heatdata<-na.omit(heatdata)
+
+annotation_col <- as.data.frame(colnames(heatdata))
+rownames(annotation_col) <- colnames(heatdata)
+
+#如果注释出界，可以通过调整格子比例和字体修正
+pheatmap(heatdata, #热图的数据
+         cluster_rows = F,#行聚类
+         cluster_cols = F,#列聚类，可以看出样本之间的区分度
+         annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = F,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100))
+```
+
+### 5-3  两种细胞的marker基因Heatmap
+```{r,fig.height=8,fig.width=6,result="hide",eval=T}
+
+annotation_col <- as.data.frame(colnames(heatdata)[1:2])
+rownames(annotation_col) <- colnames(heatdata)[1:2]
+pheatmap(heatdata[,1:2], #热图的数据
+         cluster_rows = T,#行聚类
+         cluster_cols = T,#列聚类，可以看出样本之间的区分度
+         annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = F,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100))
+knitr::kable(heatdata)
+
+```
+
+### 5-3  两种细胞的差异基因Heatmap
+```{r,fig.height=8,fig.width=6,result="hide",eval=T}
+
+degdf <- FindMarkers(Microgia,ident.1 = "DAM",ident.2 = "homeostatic microglia", logfc.threshold = 1.5,group.by = "celltype")
+knitr::kable(top10)
+
+heatdata <- mat[rownames(degdf),]
+heatdata<-na.omit(heatdata)
+
+annotation_col <- as.data.frame(colnames(heatdata)[1:2])
+rownames(annotation_col) <- colnames(heatdata)[1:2]
+pheatmap(heatdata[,1:2], #热图的数据
+         cluster_rows = T,#行聚类
+         cluster_cols = T,#列聚类，可以看出样本之间的区分度
+         annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = F,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100))
+
+
+```
+
+
+## 06Microglia cell拟时间分析
+
+
+```{r,fig.height=3,fig.width=6,result=F,eval=F}
+## 
+source("monocle2function.R")
+monocle2cds <- mymonocle2(Microgia) #monocle2function.R
+## test
+#monocle2cds <-mymonocle2(scRNA.Osteoclastic)
+ 
+p1 <- plot_cell_trajectory(monocle2cds, color_by = "celltype")
+#p2 <- plot_cell_trajectory(monocle2cds, color_by = "State")
+p3 <- plot_cell_trajectory(monocle2cds, color_by = "Pseudotime")
+print(p1|p3)
+  
+  library(ggpubr)
+p3 <- ggplot(df, aes(Pseudotime, colour = celltype, fill=celltype))+geom_density(bw=0.5,size=1,alpha = 0.5)+theme_classic2()
+p3 <- ggplot(df, aes(Pseudotime, colour = disease, fill=disease))+geom_density(bw=0.5,size=1,alpha = 0.5)+theme_classic2()
+
+  print(p3)
+```
+
+```{r,eval=F}
+source("monocle3function.R")
+source("function_subcluster.R")
+detach("package:monocle")
+
+newcds <- my_monocle3(Microgia)
+
+plot_cells(cds, reduction_method="UMAP", color_cells_by="celltype") + ggtitle('cds.umap')
+##从seurat导入整合过的umap坐标
+saveRDS(newcds,file = "Microgia_monocle3.rds")
+
+source("D:\\new desktop/神仙软件-旁门左道PPT/01functionforR/monocle3functionV1.R")
+cds <- integ_UMAP(newcds,Microgia)
+cds <- order_cells(cds) #存在bug，使用辅助线选择root细胞
+saveRDS(cds,file = "Microgia_monocle3_矫正坐标和root后.rds")
+
+```
+
+```{r,eval=F}
+
+cds <- readRDS("Microgia_monocle3_矫正坐标和root后.rds")
+p1 <-plot_cells(cds,
+           color_cells_by = "pseudotime",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,
+           graph_label_size=1.5,
+           group_label_size=4,cell_size=1.5)
+
+#p1 <- plot_cells(newcds, color_cells_by="disease")
+p2 <- plot_cells(cds, color_cells_by="orig.ident",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)
+p3 <- plot_cells(cds, color_cells_by="celltype",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)
+p4 <- plot_cells(cds, color_cells_by="disease",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)
+
+print((p1|p2)/(p3|p4))
+
+p1 <-plot_cells(cds,
+           color_cells_by = "pseudotime",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,
+           graph_label_size=1.5,
+           group_label_size=4,cell_size=1.5)+ ggtitle('int.umap')
+
+```
+
+### 6-1  Microglia cell细胞轨迹整体图谱（矫正坐标后）
+
+```{r,,fig.height=4,fig.width=6,result="hide",eval=TRUE}
+source("monocle3function.R")
+source("function_subcluster.R")
+cds <- readRDS("Microgia_monocle3_矫正坐标和root后.rds")
+
+cds <- order_cells(cds) #
+
+p1 <-plot_cells(cds,
+           color_cells_by = "pseudotime",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,
+           graph_label_size=1.5,
+           group_label_size=4,cell_size=1.5)+ ggtitle('int.umap')
+
+#p1 <- plot_cells(newcds, color_cells_by="disease")
+p2 <- plot_cells(cds, color_cells_by="orig.ident",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)+ ggtitle('int.umap')
+p3 <- plot_cells(cds, color_cells_by="celltype",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)+ ggtitle('int.umap')
+p4 <- plot_cells(cds, color_cells_by="disease",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)+ ggtitle('int.umap')
+
+print((p1|p2)/(p3|p4))
+
+p4 <- plot_cells(cds, color_cells_by="disease",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)+ ggtitle('int.umap')
+```
+
+
+```{r,fig.width=3,fig.height=3}
+plot_cells(cds, color_cells_by="disease",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,alpha = 2)+ ggtitle('int.umap')
+
+
+
+plot_cells(cds, color_cells_by="disease",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,alpha = 0.00002)+ ggtitle('int.umap')
+
+
+```
+
+
+```{r}
+#graph_test分析最重要的结果是莫兰指数（morans_I），其值在-1至1之间，0代表此基因没有
+#空间共表达效应，1代表此基因在空间距离相近的细胞中表达值高度相似。
+Track_genes <- graph_test(cds, neighbor_graph="principal_graph", cores=10)
+#挑选top10画图展示
+Track_genes_sig <- Track_genes %>% top_n(n=10, morans_I) %>%
+                   pull(gene_short_name) %>% as.character()
+write.csv(Track_genes_sig,file = "小胶质细胞时序分析画图markergene.csv")
+```
+
+### 6-1  Microglia cell细胞轨迹关键基因展示体（矫正坐标后）
+
+```{r,eval=TRUE}
+Track_genes_sig <- read.csv("小胶质细胞时序分析画图markergene.csv")
+Track_genes_sig <- Track_genes_sig$x
+#基因表达趋势图
+
+
+plot_genes_in_pseudotime(cds[Track_genes_sig,], color_cells_by="pseudotime", 
+                              min_expr=0.5, ncol = 2)
+
+
+
+#FeaturePlot图
+plot_cells(cds, genes=Track_genes_sig, show_trajectory_graph=FALSE,
+               label_cell_groups=FALSE,  label_leaves=FALSE)
+```
+
+
+```{r}
+提取拟时分析结果返回seurat对象
+metadata <- colData(cds)
+
+pseudotime <- pseudotime(cds,reduction_method = 'UMAP')
+
+pseudotime <-pseudotime[rownames(pbmc@meta.data)]
+
+pbmc$pseudotime <- pseudotime
+
+p = FeaturePlot(pbmc, reduction ="umap", features = "pseudotime")
+
+ggsave("Pseudotime_Seurat.pdf",plot = p, width = 8, height = 6)
+
+saveRDS(pbmc, file ="sco_pseudotime.rds")
+
+
+```
+
+## 07 AUC分析的一些基因展示
+
+小提琴图
+
+```{r}
+
+genessl <- c("Fdft1","Hmgcr","Lss","Pparg")
+Idents(Microgia)="disease"
+Idents(Microgia)=factor(Idents(Microgia), levels= c("Ctrl","P","AD","ADP"))
+Microgia1 <- subset(Microgia,Fdft1> 0)
+Microgia1 <- subset(Microgia,Hmgcr> 0)
+Microgia1 <- subset(Microgia1,Lss> 0)
+VlnPlot(object = Microgia1, features =c("Fdft1","Hmgcr","Lss","Pparg"),split.by="disease",stack=T,cols=c('#CC0000',"#BBBBBB", '#2f5688' ))
+
+p1 <- VlnPlot(subset(Microgia,Fdft1> 0), "Fdft1")+ theme_bw()
+p2 <- VlnPlot(subset(Microgia,Hmgcr> 0), "Hmgcr")+ theme_bw()
+p3 <- VlnPlot(subset(Microgia,Lss> 0), "Lss")+ theme_bw()
+p4 <- VlnPlot(subset(Microgia,Pparg> 0), "Pparg")+ theme_bw()
+(p1|p2)/(p3|p4)
+
+```
+
+HALLMARK_APOPTOSIS
+
+```{r}
+p1 <- VlnPlot(subset(Microgia,Ifitm3> 0), "Ifitm3")+ theme_bw()
+p2 <- VlnPlot(subset(Microgia,Mmp2> 0), "Mmp2")+ theme_bw()
+p3 <- VlnPlot(subset(Microgia,Tspo> 0), "Tspo")+ theme_bw()
+p4 <- VlnPlot(subset(Microgia,App> 0), "App")+ theme_bw()
+p5<- VlnPlot(subset(Microgia,Timp3> 0), "Timp3")+ theme_bw()
+(p1|p2)/(p3|p4)/(p5|p5)
+```
+
+HALLMARK_TGF
+
+```{r}
+p1 <- VlnPlot(subset(Microgia,Bmpr2> 0), "Bmpr2")+ theme_bw()
+p2 <- VlnPlot(subset(Microgia,Klf10> 0), "Klf10")+ theme_bw()
+p3 <- VlnPlot(subset(Microgia,Id1> 0), "Id1")+ theme_bw()
+p4 <- VlnPlot(subset(Microgia,Id3> 0), "Id3")+ theme_bw()
+#p5<- VlnPlot(subset(Microgia,Timp3> 0), "Timp3")+ theme_bw()
+(p1|p2)/(p3|p4)
+```
+
+## 炎症小体
+
+### textmining找到炎症小体相关基因
+
+
+```{r}
+library(rio)
+library(pubmed.mineR)
+library(survminer)
+library(GEOquery)  
+library(ggplot2)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+pubmed_abstracts <- readabsnew("D:\\new desktop\\炎症小体文本挖掘\\abstract-inflammaso-set.txt")
+genes<- gene_atomization(pubmed_abstracts)
+genes<-as.data.frame(genes)
+write.csv(genes,file = "炎症小体相关基因列表.csv")
+
+
+```
+
+
+```{r}
+
+
+##转为GMT格式
+df_forGMT <- data.frame(
+  inflammasome=c("inflammasome",genes$Gene_symbol[1:389])
+)
+write.table(t(df_forGMT),"IF_specific.gmt",quote=F,sep="\t",row.names=T,col.names=F)
+set.seed(999)
+myinf(df)
+```
+
+
+### GSEA 分析
+
+#### 先找到差异基因的全部列表
+
+```{r}
+Idents(Microgia)="disease"
+
+diffgenes.IGE.all <- FindMarkers(Microgia,ident.1="ADP",slot="data",assay = 'RNA',
+                       logfc.threshold =0,min.pct = 0)
+write.csv(diffgenes.IGE.all,file = "所有的差异基因.csv")
+
+crossgene <- intersect(toupper(rownames(diffgenes.IGE.all)),genes$Gene_symbol)
+write.csv(crossgene,file = "ADP组差异基因和textmining的交集.csv")
+```
+
+
+```{r}
+
+myinf <- function(df){
+  
+  df <- data.frame(rownames(diffgenes.IGE.all),diffgenes.IGE.all$avg_log2FC)
+genelist <-  df[,2]
+names(genelist)=toupper(df[,1])
+  genelist=sort(genelist,decreasing = T)
+library(ggplot2)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(GSEABase)
+library(enrichplot)
+#geneset=read.gmt("I:\\已完成自动同步\\2022年5月七天的代码资料\\51七天的代码\\第五天\\c2.cp.kegg.v7.5.1.symbols.gmt")
+geneset=read.gmt("IF_specific.gmt")
+
+egmt=GSEA(genelist,TERM2GENE = geneset,
+          minGSSize = 1,pvalueCutoff = 0.5)
+
+down.kegg.res <- egmt@result
+
+ p <- gseaplot2(egmt,down.kegg.res$ID[1],title = "inflammasome pathway",pvalue_table = T)
+  print(p)
+return(down.kegg.res)
+}
+
+
+```
+
+
+```{r}
+dfall <- c()
+for(i in 2:540){
+  
+  df_forGMT <- data.frame(
+  inflammasome=c("inflammasome",genes$Gene_symbol[1:i])
+)
+write.table(t(df_forGMT),"IF_specific.gmt",quote=F,sep="\t",row.names=T,col.names=F)
+set.seed(999)
+df <- myinf(df)
+  dfall <- rbind(dfall,df)
+  print(i)
+}
+
+write.csv(dfall,file = "最佳炎症小体选择基因数量.csv")
+
+```
+
+# figure 2 调整
+
+```{r}
+Microgia$celltype
+homo <- subset(Microgia,celltype=="homeostatic microglia")
+homo$RNA_snn_res.0.1
+DimPlot(homo, group.by="RNA_snn_res.0.3", label=F , reduction='umap')
+stacked_bar_plot_v1(homo,homo$RNA_snn_res.0.3)
+
+
+
+Microgia$subcelltype <- Microgia$celltype
+
+for(i in 1:length(Microgia$subcelltype)){
+if(Microgia$subcelltype[i]=="homeostatic microglia"){
+  Microgia$subcelltype[i]=paste0("homeostatic microglia ", Microgia$RNA_snn_res.0.3[i])
+}
+}
+
+for(i in 1:length(Microgia$subcelltype)){
+if(Microgia$subcelltype[i]=="homeostatic microglia 3"){
+  Microgia$subcelltype[i]=paste0("homeostatic microglia ",4)
+}else if(Microgia$subcelltype[i]=="homeostatic microglia 2"){
+  Microgia$subcelltype[i]=paste0("homeostatic microglia ",3)
+}else if(Microgia$subcelltype[i]=="homeostatic microglia 1"){
+  Microgia$subcelltype[i]=paste0("homeostatic microglia ",2)
+}else if(Microgia$subcelltype[i]=="homeostatic microglia 0"){
+  Microgia$subcelltype[i]=paste0("homeostatic microglia ",1)
+}
+  
+}
+
+
+DimPlot(Microgia, group.by="subcelltype", label=F, reduction='umap')
+saveRDS(Microgia,file = "subcelltype细分之后的Microglia1111.rds")
+Microgia$celltype <- Microgia$subcelltype
+```
+
+```{r,fig.height=2,fig.width=6,result="hide",eval=TRUE}
+Microgia <- readRDS("subcelltype细分之后的Microglia1111.rds")
+library(Seurat)
+unique(Microgia$celltype)
+Idents(Microgia)="subcelltype"
+df <- FindAllMarkers(Microgia)
+write.csv(df,file = "小胶质细胞分群Marker.csv")
+DimPlot(Microgia, group.by="subcelltype", label=F ,split.by="disease", reduction='umap')
+
+```
+
+```{r}
+stacked_bar_plot_v1(Microgia,Microgia$subcelltype)
+homo <- subset(Microgia,celltype=="homeostatic microglia")
+stacked_bar_plot_v1(homo,homo$subcelltype)
+
+```
+
+
+### 各类小胶质细胞占小胶质细胞的比例
+
+```{r,fig.height=2.4,fig.width=8,eval=TRUE}
+cellnum <- as.data.frame((table(Microgia$disease, Microgia$subcelltype)))
+cell.prop<-as.data.frame(prop.table(table(Microgia$disease, Microgia$subcelltype)))
+cell.prop$count <- cellnum$Freq
+
+colnames(cell.prop)<-c("cluster","patient","proportion","count")
+#write.csv(cell.prop,file = "比例2.csv")
+i=1
+mydata <- c()
+groupname <- unique(as.character(cell.prop$cluster))
+for(i in 1:length(groupname)){
+subgroup <- cell.prop %>% dplyr::select_all() %>% dplyr::filter(cluster==groupname[i])
+subgroup$Freq <-subgroup$proportion/ sum(subgroup$proportion)
+mydata <- rbind(mydata,subgroup)
+  print(i)
+  
+}
+
+
+
+names(mydata) <- c("disease","celltype","prop","count","freq")
+ mydata$disease = factor(mydata$disease, levels=c("Ctrl","P", "AD","ADP")) ## 设置柱条的顺序
+
+ggplot(mydata,aes(celltype,freq,fill=disease))+
+geom_bar(stat="identity",position="dodge") +ggtitle("分组柱状图")+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+
+write.csv(mydata,file = "1128小胶质细胞比例2.csv")
+
+
+
+```
+
+
+###  普通Heatmap 
+
+```{r,,fig.height=8,fig.width=6,results='hold',eval=TRUE}
+
+library(pheatmap)
+Idents(Microgia)="subcelltype"
+degdf <- FindAllMarkers(Microgia, logfc.threshold = 2,group.by = "subcelltype")
+#degdf <- FindMarkers(Microgia,ident.1 = "DAM",ident.2 = "homeostatic microglia", logfc.threshold = 0.3,group.by = "celltype")
+#top10 <- degdf %>% top_n(n = 10, wt = avg_log2FC)
+
+knitr::kable(degdf)
+
+
+subobj <- subset(Microgia, downsample = 40)
+DoHeatmap(subobj, features = degdf$gene,group.by = "subcelltype")
+
+```
+
+```{r}
+marrow <- my_cicle(Microgia,"ALL")
+
+Idents(Microgia)
+table(Microgia$subcelltype,Microgia$disease)
+
+Dam <- subset(Microgia,subcelltype ="DAM" )
+
+```
+
+```{r}
+DAMtf <- 
+```
+
+
+# figure 2 第二次调整
+
+```{r}
+Microgia$RNA_snn_res.1.1
+Microgia <- readRDS("subcelltype细分之后的Microglia1111.rds")
+DimPlot(Microgia, group.by="RNA_snn_res.1.1", label=F, reduction='umap')
+DimPlot(Microgia, group.by="subcelltype", label=F, reduction='umap')
+Idents(Microgia)="RNA_snn_res.1.1"
+markers14 <- FindAllMarkers(Microgia)
+#marker5 <- FindAllMarkers()
+write.csv(markers14,"9群的microgia的Marker.csv")
+```
+
+
+```{r}
+celltype=data.frame(ClusterID=0:14,
+                    celltype=0:14)   
+celltype[celltype$ClusterID %in% c( 1  ),2]='Postnatal immature microglia' 
+celltype[celltype$ClusterID %in% c( 2  ),2]='Embryonic microglia'   
+celltype[celltype$ClusterID %in% c(  3 ),2]='IEG+ microglia' 
+celltype[celltype$ClusterID %in% c(  5 ),2]='S phase microglia' 
+celltype[celltype$ClusterID %in% c(  13 ),2]='G2/M phase microglia' 
+celltype[celltype$ClusterID %in% c(  10 ),2]='PAM' 
+celltype[celltype$ClusterID %in% c(  4 ),2]='Homo microglia' 
+celltype[celltype$ClusterID %in% c(0,6,7,8,9,11,12,14),2]='Others'  
+
+for(i in 1:nrow(celltype)){
+  Microgia@meta.data[which(Microgia@meta.data$RNA_snn_res.2 == celltype$ClusterID[i]),'develop'] <- celltype$celltype[i]}
+table(Microgia@meta.data$develop)
+ DimPlot(Microgia, group.by="develop", label=F, reduction='umap')
+ 
+```
+
+```{r,,fig.height=2,fig.width=6,result="hide"}
+ DimPlot(Microgia, group.by="RNA_snn_res.1.1",split.by = "disease", label=F, reduction='umap')
+table(Microgia$RNA_snn_res.1.1)#,Microgia$develop)
+```
+
+```{r,fig.height=2.4,fig.width=8,eval=TRUE}
+cellnum <- as.data.frame((table(Microgia$disease, Microgia$RNA_snn_res.1.1)))
+cell.prop<-as.data.frame(prop.table(table(Microgia$disease, Microgia$RNA_snn_res.1.1)))
+cell.prop$count <- cellnum$Freq
+
+colnames(cell.prop)<-c("cluster","patient","proportion","count")
+#write.csv(cell.prop,file = "比例2.csv")
+i=1
+mydata <- c()
+groupname <- unique(as.character(cell.prop$cluster))
+for(i in 1:length(groupname)){
+subgroup <- cell.prop %>% dplyr::select_all() %>% dplyr::filter(cluster==groupname[i])
+subgroup$Freq <-subgroup$proportion/ sum(subgroup$proportion)
+mydata <- rbind(mydata,subgroup)
+  print(i)
+  
+}
+
+
+
+names(mydata) <- c("disease","celltype","prop","count","freq")
+ mydata$disease = factor(mydata$disease, levels=c("Ctrl","P", "AD","ADP")) ## 设置柱条的顺序
+
+ggplot(mydata,aes(celltype,freq,fill=disease))+
+geom_bar(stat="identity",position="dodge") +ggtitle("分组柱状图")+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+
+write.csv(mydata,file = "十个群的比例.csv")
+```
+
+# figure2 第三次调整
+
+```{r}
+celltype=data.frame(ClusterID=0:10,
+                    celltype=0:10)   
+celltype[celltype$ClusterID %in% c( 1  ),2]='HM2' 
+celltype[celltype$ClusterID %in% c( 2  ),2]='REM'   
+celltype[celltype$ClusterID %in% c(  6 ),2]='DAM' 
+celltype[celltype$ClusterID %in% c(  7 ),2]='MHC-II' 
+celltype[celltype$ClusterID %in% c(  8 ),2]='Cyc-M' 
+celltype[celltype$ClusterID %in% c(  9 ),2]='CPM' 
+#celltype[celltype$ClusterID %in% c(  4 ),2]='Homo microglia' 
+celltype[celltype$ClusterID %in% c(0,3,4,5),2]='HM1'  
+
+for(i in 1:nrow(celltype)){
+  Microgia@meta.data[which(Microgia@meta.data$RNA_snn_res.1.1 == celltype$ClusterID[i]),'subcelltype'] <- celltype$celltype[i]}
+table(Microgia@meta.data$RNA_snn_res.1.1)
+ p1 <- DimPlot(Microgia, group.by="subcelltype", label=F, reduction='umap')
+ 
+library(ggsci)
+p1+ scale_color_aaas()
+p1 + scale_color_nejm()
+p1 + scale_color_d3()
+p1 + scale_color_uchicago()
+p1 + ggsci::scale_color_jama()
+# p1 + ggsci::scale_color_jco()
+# p1 + ggsci::scale_color_lancet()
+# p1 + ggsci::scale_color_locuszoom()
+# 
+# p1 + ggsci::scale_color_ucscgb()
+
+saveRDS(Microgia,file = "第三次注释小胶质细胞.rds")
+```
+### 热图
+
+```{r,fig.height=4,fig.width=8}
+Microgia <- readRDS("第三次注释小胶质细胞.rds")
+Idents(Microgia)="subcelltype"
+markers <- FindAllMarkers(Microgia)
+markers$cluster
+markers2 <-  markers%>% dplyr::select_all()%>% group_by(cluster) %>% top_n(100,avg_log2FC)#分组求最大值
+DoHeatmap(Microgia,features =markers2$gene)
+Idents(Microgia)="disease"
+# subobj <- subset(Microgia, downsample = 40)
+# Idents(subobj)="subcelltype"
+#  DoHeatmap(subobj,features =markers2$gene)
+# subobj <- subset(subcluster, downsample = 40)
+
+
+
+```
+
+## GO
+
+```{r,fig.height=4,fig.width=6,result="hide"}
+
+cellnamesall <- unique(markers2$cluster)
+markers2 <-  markers%>% dplyr::select_all()%>% group_by(cluster) %>% top_n(10,avg_log2FC)#分组求最大值
+for(i in 1:length(cellnamesall)){
+  subgroupsc <- subset(Microgia,subcelltype==cellnamesall[i])
+  markers4 <- FindMarkers(subgroupsc,ident.1 = "ADP",ident.2 = "AD",logfc.threshold = 0.2)
+markers4<- markers4%>% dplyr::select_all()%>%  top_n(200,avg_log2FC)#分组求最大值
+goandkegg(rownames(markers4),"DAM")
+print(i)
+  
+}
+saveRDS(subgroupsc,file = "DAM01.rds")
+```
+
+
+## 转录因子
+
+```{r}
+cellnames <- colnames(Microgia)
+TF <- as.data.frame(nn)
+
+crosssample <- intersect(colnames(Microgia),colnames(TF))
+microgliaTF <- TF[,crosssample]
+microgliaTF <- as.data.frame(t(microgliaTF))
+microgliaTF$id <- rownames(microgliaTF)
+meta <- Microgia@meta.data
+meta$id <- rownames(meta)
+
+alldata <- merge(meta,microgliaTF,by="id")
+
+table(alldata$disease,alldata$subcelltype)
+write.csv(alldata,"小胶质细胞的TF.csv")
+alldata$`E2f3(+)`
+```
+
+```{r}
+write.csv(alldata,"小胶质细胞的TF.csv")
+
+top.mar = 0.2
+right.mar = 0.2
+botton.mar = 0.2
+left.mar = 0.2
+## 自定义主题
+## 合并上面的参数，将其合并成mythemel
+mytheme1 <- theme(panel.background = element_blank(),
+                  axis.ticks.length=unit(1.6,"mm"),
+                  plot.margin=unit(x=c(top.mar,right.mar,botton.mar,left.mar),
+                                   units="inches"))
+#自定义主题2；
+#隐藏纵轴，并对字体样式、坐标轴的粗细、颜色、刻度长度进行限定；
+mytheme2<-theme_classic()+
+  theme(text=element_text(family = "sans",colour ="gray30",size = 12),
+        axis.line = element_line(size = 0.6,colour = "gray30"),
+        axis.ticks = element_line(size = 0.6,colour = "gray30"),
+        axis.ticks.length = unit(1.5,units = "mm"),
+        plot.margin=unit(x=c(top.mar,right.mar,botton.mar,left.mar),
+                         units="inches"))
+gene <- c("E2f3(+)")
+my_violinplot <- function(gene){
+  
+  expr <- alldata[,c(gene,"disease","subcelltype")]
+
+names(expr) <- c("gene","disease","subcelltype")
+
+## 散点+小提琴图
+p <- ggplot(expr, aes(x=factor(disease), gene, fill=factor(disease)))+ 
+geom_jitter(width = 0.01,height = 0.01,alpha = 0.2)+
+  geom_violin(aes(x=factor(disease),y=gene),alpha=0.8,width=1,expr)+mytheme2+
+  xlab("")+ylab(gene)
+print(p)
+## 柱状图
+p <- ggplot(expr,aes(disease,gene,color=disease,fill=disease))+
+  geom_bar(stat="summary",fun=mean,position="dodge")+
+    #geom_jitter(width = 0.01,height = 0.01,alpha = 0.2)+
+    mytheme2 +xlab("")+ylab(gene)
+print(p)
+# 去掉0之后的小提琴图
+
+expr2 <- expr[which(expr$gene>0),]
+p <- ggplot(expr, aes(x=factor(disease), gene, fill=factor(disease)))+ 
+  geom_violin()+mytheme2+
+  xlab("")+ylab(gene)
+print(p)
+
+## 箱+小提琴  （去掉0之后）
+p2 <- ggplot(expr2, aes(x = disease, y = gene, fill = disease))+ 
+  geom_violin(expr2, mapping = aes(color =disease, fill = disease), 
+              alpha = 0.4, 
+              trim = F, 
+              show.legend = F)+ 
+  ## 添加箱线图 
+  geom_boxplot(expr2, mapping = aes(color = disease, fill = disease), 
+               width = 0.1, 
+               show.legend = F)+ 
+  mytheme2
+print(p2)
+
+# 均值折线图 （没有去掉0值）
+
+expr3 <- aggregate(expr,list(expr$disease),mean)
+
+colnames(expr3) <- c("disease","group","gene")
+expr3$group=c(gene[1])
+
+p3 <- ggplot(expr3, aes(x=disease, y=gene,group=group,color=group)) + 
+    geom_line(aes(),size = 1) + 
+    geom_point(aes(),size = 2)+mytheme2 
+
+print(p3)
+
+# 均值折线图（去掉0值之后）
+
+expr4 <- aggregate(expr2,list(expr2$disease),mean)
+colnames(expr4) <- c("disease","group","gene")
+expr4$group=c(gene[1])
+
+p <-ggplot() + 
+    geom_line(data=expr4,aes(x=disease, y=gene,group=group,color=group),size = 1) + 
+    #(data=expr,aes(x=disease, y=gene,group=disease,color=disease),size = 2)+
+    #geom_jitter(width = 0.01,height = 0.01,alpha = 0.2)+
+    mytheme2 
+print(p)
+# 均值+散点 (去掉0值之后的均值+散点)
+
+
+p <- ggplot() + 
+    geom_line(data=expr4,aes(x=disease, y=gene,group=group,color=group),size = 1) + 
+    geom_point(data=expr,aes(x=disease, y=gene,group=disease,color=disease),size = 2)+
+    #geom_jitter(width = 0.01,height = 0.01,alpha = 0.2)+
+    mytheme2 
+
+print(p)
+#  去掉0值之后的均值折线+跳动的散点图
+p <- ggplot() + 
+    geom_line(data=expr4,aes(x=disease, y=gene,group=group,color=group),size = 1) + 
+    #geom_point(data=expr,aes(x=disease, y=gene,group=disease,color=disease),size = 2)+
+    geom_jitter(data=expr,aes(x=disease, y=gene,group=disease,color=disease),width = 0.1,height = 0.01,alpha = 2)+
+    mytheme2 
+
+print(p)
+return(expr)
+}  
+
+
+for(i in 1:length(gene)){
+ my_violinplot(scdata,gene[i])
+ 
+} 
+```
+
+
+## go对小胶质细胞细胞每种细胞群做功能注释
+
+找到marker 基因
+
+```{r,fig.height=5,fig.width=6,result="hide"}
+#subcelltype
+Tcell <- Microgia
+Idents(Tcell)="subcelltype"
+cellall <- unique(Tcell$subcelltype)
+for(i in length())
+
+cellall <- unique(AFTcellmarkerall$cluster)
+goall <- c()
+i=1
+for(i in 1:length(cellall)){
+    print(cellall[i])
+    gene <- markers2 %>% dplyr::select_all() %>% dplyr::filter(cluster==cellall[i])
+    gene <- gene$gene
+    gene=bitr(gene,fromType="SYMBOL",toType="ENTREZID",OrgDb="org.Mm.eg.db")
+    gene <- dplyr::distinct(gene,SYMBOL,.keep_all=TRUE)
+##go\
+     go<- enrichGO(gene = gene$ENTREZID, OrgDb = org.Mm.eg.db,ont = "ALL", pvalueCutoff  = 0.5, qvalueCutoff  = 0.01,readable=T)  
+     re <- go@result
+    namego <- paste0("Go分析",cellall[i],".csv")
+   # goall <- rbind(go,goall)
+  write.csv(re,file =namego)
+}
+
+
+
+
+
+```
+```{r,fig.height=2,fig.width=4,result="hide"}
+#go <- import("clipboard")
+
+go$Description <- factor(go$Description,labels = go$Description)
+
+top.mar = 0.2
+right.mar = 0.2
+botton.mar = 0.2
+left.mar = 0.2
+## 自定义主题
+## 合并上面的参数，将其合并成mythemel
+mytheme1 <- theme(panel.background = element_blank(),
+                  axis.ticks.length=unit(1.6,"mm"),
+                  plot.margin=unit(x=c(top.mar,right.mar,botton.mar,left.mar),
+                                   units="inches"))
+#自定义主题2；
+#隐藏纵轴，并对字体样式、坐标轴的粗细、颜色、刻度长度进行限定；
+mytheme2<-theme_classic()+
+  theme(text=element_text(family = "sans",colour ="gray30",size = 12),
+        axis.line = element_line(size = 0.6,colour = "gray30"),
+        axis.ticks = element_line(size = 0.6,colour = "gray30"),
+        axis.ticks.length = unit(1.5,units = "mm"),
+        plot.margin=unit(x=c(top.mar,right.mar,botton.mar,left.mar),
+                         units="inches"))
+
+ggplot(data = go, mapping = aes(x = X.3, y = X.10, fill=X.10)) + geom_bar(stat = 'identity')+ggsci::scale_color_aaas()+coord_flip()+mytheme2
+
+
+go$X.3 <- factor(go$X.3,levels  = go$X.3)
+ggplot(data = go, mapping = aes(x = X.3, y = X.10)) + 
+  geom_bar(stat = 'identity',alpha = 0.2, fill = '#000080')+
+  #ggsci::scale_color_aaas()+
+  coord_flip()+
+  mytheme2
+#+ annotate("text", x = 1:7, y = 0.5, label = go$X.3,hjust = 0)
+
+ggplot(data = go, mapping = aes(x = Description, y = GeneRatio)) + 
+  geom_bar(stat = 'identity',alpha = 0.2, fill = '#000080')+
+  #ggsci::scale_color_aaas()+
+  coord_flip()+
+  mytheme2
+go$Count
+ggplot(data = go, mapping = aes(x = Description, y = -log(pvalue))) + 
+  geom_bar(stat = 'identity',alpha = 0.2, fill = '#000080')+
+  #ggsci::scale_color_aaas()+
+  coord_flip()+
+  mytheme2
+
+ggplot(data = go, mapping = aes(x = Description, y = -log(p.adjust))) + 
+  geom_bar(stat = 'identity',alpha = 0.2, fill = '#000080')+
+  #ggsci::scale_color_aaas()+
+  coord_flip()+
+  mytheme2
+
+ggplot(data = go, mapping = aes(x = Description, y = BgRatio)) + 
+  geom_bar(stat = 'identity',alpha = 0.2, fill = '#000080')+
+  #ggsci::scale_color_aaas()+
+  coord_flip()+
+  mytheme2
+
+ggplot(data = go, mapping = aes(x = Description, y = Count)) + 
+  geom_bar(stat = 'identity',alpha = 0.2, fill = '#000080')+
+  #ggsci::scale_color_aaas()+
+  coord_flip()+
+  mytheme2
+
+```
+
+
+
+# figure 3 神经元亚群细分分析
+```{r,fig.height=8,fig.width=26,result="hide"}
+name <- paste0("I:\\BaiduSyncdisk/01牙周炎项目\\02subcluster\\Neurons_harmony2022-07-23.rds")
+subcluster <- readRDS(name)
+
+#table(subcluster@meta.data$disease )
+reslist <- c(seq(0.08,0.08,0.01))
+subcluster <- findalltop_v1(subcluster,reslist,10)
+table(subcluster$RNA_snn_res.0.08)
+CellMarkerdf3 <- import("D:\\new desktop\\牙周炎项目\\神经元标志物.xlsx")
+names(CellMarkerdf3) <- c("cluster","cellname","markergene")
+my_alldotplot(subcluster,CellMarkerdf3,0.08,0.08,0.01)
+
+```
+
+
+
+
+>参考文献：Microglia in Alzheimer’s disease at single-cell level. Are there common patterns in humans and mice?
+
+```{r,fig.height=4,fig.width=16}
+subcluster <- readRDS("D:\\new desktop\\牙周炎项目\\02subcluster\\Microglial cell_harmony2022-07-23.rds")
+reslist <- c(seq(0.2,0.25,0.01))
+subcluster <- findalltop_v1(subcluster,reslist,10)
+
+for(i in 1:length(subcluster@tools$top10list)){
+  res=reslist[i]
+  name=paste0(res,"的subcluster分辨率下的分群结果",Sys.Date(),".csv")
+  df <- subcluster@tools$top10list[[i]]
+  write.csv(df,file = name)
+  #namepdf=paste0(res,"的subcluster分辨率下的分群结果",Sys.Date(),".pdf")
+  #image <- DoHeatmap(subcluster, features = df$gene) + NoLegend()
+  #ggsave(file=namepdf, plot=image, width=10, height=28)
+  print(i)
+}
+
+
+
+```
+
+测试结论：res=0.08   7群最好 
+
+
+```{r,fig.height=4,fig.width=16}
+
+library(rio)
+Idents(subcluster) <- "RNA_snn_res.0.08"
+
+subcluster$celltype
+
+celltype <- import("..\\神经元标志物.xlsx")
+names(celltype) <- c("ClusterID","celltype")
+celltype <- celltype[c(1,2,5,7,10,12,13),]
+i=1
+for(i in 1:nrow(celltype)){
+  subcluster@meta.data[which(subcluster@meta.data$RNA_snn_res.0.08 == celltype$cluster[i]),'celltype'] <- celltype$cell[i]}
+table(subcluster@meta.data$celltype)
+ 
+
+name=paste0("神经元subcluster_res=0.08注释结果",Sys.Date(),".rds")
+saveRDS(subcluster,name)
+
+```
+
+
+
+## 01分群结果图
+
+```{r,eval=TRUE}
+subcluster <- readRDS("I:\\BaiduSyncdisk\\01牙周炎项目\\rawdata\\神经元subcluster_res=0.08注释结果2022-11-06.rds")
+subcluster@meta.data$disease <- gsub("WT","Ctrl",subcluster@meta.data$disease)
+Idents(subcluster)="disease"
+Idents(subcluster)=factor(Idents(Microgia), levels= c("Ctrl","P","AD","ADP"))
+DimPlot(subcluster, label=F , reduction='umap')
+DimPlot(subcluster, group.by="celltype", label=F , reduction='umap')
+
+```
+
+
+```{r,eval=TRUE,fig.height=2,fig.width=10,result="hide"}
+DimPlot(subcluster, group.by="celltype", label=F ,split.by = "disease", reduction='umap')
+
+DimPlot(subcluster, group.by="disease", label=F ,split.by = "disease", reduction='umap')
+
+
+```
+
+## 02注释marker gene
+```{r,fig.height=4,fig.width=9,result="hide",eval=TRUE}
+CellMarkerdf3 <- import("..\\神经元标志物.xlsx")
+names(CellMarkerdf3) <- c("cluster","cellname","markergene")
+my_alldotplot(subcluster,CellMarkerdf3,0.08,0.08,0.01)
+CellMarkerdf <- CellMarkerdf3
+selectmarker <-  subcluster@tools$top10list[[1]]
+selectCellMarkerdf <- CellMarkerdf%>% dplyr::select_all() %>% dplyr::filter(markergene %in%selectmarker$gene)
+
+selectCellMarkerdf=selectCellMarkerdf[!duplicated(selectCellMarkerdf$markergene),]
+select_genes_all=split(selectCellMarkerdf$markergene,selectCellMarkerdf$cellname)
+
+Idents(subcluster) <- "celltype"
+DotPlot(object = subcluster, 
+              features=select_genes_all, 
+              assay = "RNA") + theme(axis.text.x = element_text(angle = 45, 
+                                                                vjust = 0.5, hjust=0.5))
+```
+
+## 03累及柱状图
+```{r,fig.height=4,fig.width=4,result="hide",eval=TRUE}
+stacked_bar_plot_v1(subcluster,subcluster$RNA_snn_res.0.08)
+library(ggsci)
+stacked_bar_plot_v1(subcluster,subcluster$celltype)+ggsci::f
+
+```
+
+```{r,fig.height=4,fig.width=6,result="hide"}
+
+gene <- import("clipboard")
+gene <- gene$gene
+expr <- FetchData(object = scRNA, vars = mk)
+expr2 <-AverageExpression(scRNA,features = gene,group.by = "disease")
+write.csv(expr2,file = "神经元markergene.csv")
+FeaturePlot(subcluster,features = gene)
+
+```
+
+
+
+
+## 04 分组柱状图
+
+### 各类神经元占神经细胞的比例
+
+```{r,fig.height=2.4,fig.width=14,eval=TRUE}
+cellnum <- as.data.frame((table(subcluster$disease, subcluster$celltype)))
+cell.prop<-as.data.frame(prop.table(table(subcluster$disease, subcluster$celltype)))
+cell.prop$count <- cellnum$Freq
+
+colnames(cell.prop)<-c("cluster","patient","proportion","count")
+#write.csv(cell.prop,file = "比例2.csv")
+i=1
+mydata <- c()
+groupname <- unique(as.character(cell.prop$cluster))
+for(i in 1:length(groupname)){
+subgroup <- cell.prop %>% dplyr::select_all() %>% dplyr::filter(cluster==groupname[i])
+subgroup$Freq <-subgroup$proportion/ sum(subgroup$proportion)
+mydata <- rbind(mydata,subgroup)
+  print(i)
+  
+}
+
+
+
+names(mydata) <- c("disease","celltype","prop","count","freq")
+ mydata$disease = factor(mydata$disease, levels=c("Ctrl","P", "AD","ADP")) ## 设置柱条的顺序
+
+ggplot(mydata,aes(celltype,freq,fill=disease))+
+geom_bar(stat="identity",position="dodge") +ggtitle("分组柱状图")+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+
+write.csv(mydata,file = "神经元比例.csv")
+
+
+```
+
+
+```{r,fig.height=2.4,fig.width=4,results='hold',eval=TRUE}
+knitr::kable(mydata)
+```
+
+
+
+```{r,fig.height=2,fig.width=8,result="hide",eval=TRUE}
+cellnameall <- unique(mydata$celltype)
+library(ggpubr)
+plotlist <- list()
+for(i in 1:length(cellnameall)){
+  cellname <- cellnameall[i]
+  df <- mydata %>% select_all() %>% dplyr::filter(celltype==cellname)
+  plotlist[[i]] <-  ggplot(df,aes(celltype,freq,fill=disease))+
+   geom_bar(stat="identity",position="dodge") +ggtitle(cellname)+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+  print(plotlist[[i]])
+   #+stat_compare_means(aes(group = disease,label = ..p.signif..),method = "kruskal.test")
+  }
+
+print(plotlist[[1]]|plotlist[[2]]|plotlist[[3]]|plotlist[[4]]|plotlist[[5]]|plotlist[[6]])
+```
+
+### 各类神经元占总体细胞的比例
+
+
+```{r,fig.height=2.4,fig.width=4,result="hide",eval=TRUE}
+
+cellnum2 <- as.data.frame((table(scRNA$disease, scRNA$celltype)))
+cell.prop2<-as.data.frame(prop.table(table(scRNA$disease, scRNA$celltype)))
+cell.prop2$count <- cellnum2$Freq
+colnames(cell.prop2)<-c("cluster","patient","proportion","count")
+
+
+
+
+cell.prop<-as.data.frame(prop.table(table(subcluster$disease, subcluster$celltype)))
+cell.prop$count <- cellnum$Freq
+colnames(cell.prop)<-c("cluster","patient","proportion","count")
+#write.csv(cell.prop,file = "比例2.csv")
+i=1
+mydata <- c()
+groupname <- unique(as.character(cell.prop$cluster))
+for(i in 1:length(groupname)){
+allgroup <- cell.prop2 %>% dplyr::select_all() %>% dplyr::filter(cluster==groupname[i])## 整体的细胞数量统计
+  
+subgroup <- cell.prop %>% dplyr::select_all() %>% dplyr::filter(cluster==groupname[i])
+subgroup$Freq <-subgroup$count/ sum(allgroup$count)
+mydata <- rbind(mydata,subgroup)
+  print(i)
+  
+}
+
+
+names(mydata) <- c("disease","celltype","prop","count","freq")
+ mydata$disease = factor(mydata$disease, levels=c("Ctrl","P", "AD","ADP")) ## 设置柱条的顺序
+
+ggplot(mydata,aes(celltype,freq,fill=disease))+
+geom_bar(stat="identity",position="dodge") +ggtitle("分组柱状图")+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+
+```
+
+
+
+```{r,,fig.height=4,fig.width=16,eval=TRUE}
+cellnameall <- unique(mydata$celltype)
+library(ggpubr)
+plotlist <- list()
+for(i in 1:length(cellnameall)){
+  cellname <-as.character(cellnameall[i]) 
+  df <- mydata %>% dplyr::select_all() %>% dplyr::filter(celltype==cellname)
+  plotlist[[i]] <-  ggplot(df,aes(celltype,freq,fill=disease))+
+   geom_bar(stat="identity",position="dodge") +ggtitle(cellname)+
+    theme_bw()+ theme_classic() +
+    theme(axis.ticks.length=unit(0.5,'cm'))+
+    guides(fill=guide_legend(title=NULL))
+  print(plotlist[[i]])
+   
+  }
+
+#print(plotlist[[1]]|plotlist[[2]]|plotlist[[3]])
+```
+
+
+## 05  神经元不同种类的差异 gene 热图
+
+
+### 5-1普通Heatmap 
+
+缺失值太多，不好看
+
+```{r,,fig.height=4,fig.width=4,result="hide",results='hold',eval=TRUE}
+
+library(pheatmap)
+Idents(subcluster)="celltype"
+degdf <- FindAllMarkers(subcluster, logfc.threshold = 1,group.by = "celltype")
+#degdf <- FindMarkers(subcluster,ident.1 = "DAM",ident.2 = "homeostatic microglia", logfc.threshold = 0.3,group.by = "celltype")
+top10 <- degdf %>% top_n(n = 10, wt = avg_log2FC)
+ degdf$avg_log2FC
+top10 <- degdf %>% dplyr::select_all()%>% group_by(celltype) %>% top_n(10,avg_log2FC)#分组求最大值
+
+knitr::kable(degdf)
+
+
+subobj <- subset(subcluster, downsample = 40)
+DoHeatmap(subobj, features = top10$gene,group.by = "celltype")
+```
+### 5-2  取均值重新做Heatmap
+
+```{r,fig.height=8,fig.width=6,result="hide",eval=T}
+##不成功的heatmap 缺失值太多 取均值
+
+#help(package='Seurat')
+gene_features <- degdf %>%dplyr::select_all() %>% dplyr::filter(abs(avg_log2FC)>2)
+mat<- as.data.frame(AverageExpression(subcluster)[[1]])## 取均值
+mat <- log2(mat + 1)
+heatdata <- mat[rownames(gene_features),]
+heatdata<-na.omit(heatdata)
+
+annotation_col <- as.data.frame(colnames(heatdata))
+rownames(annotation_col) <- colnames(heatdata)
+
+#如果注释出界，可以通过调整格子比例和字体修正
+pheatmap(heatdata, #热图的数据
+         cluster_rows = F,#行聚类
+         cluster_cols = F,#列聚类，可以看出样本之间的区分度
+         annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = F,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100))
+```
+
+
+```{r}
+celltype <- unique(subcluster$celltype)
+for(i in 1:length(celltype)){
+    yaqun = subcluster[,subcluster@meta.data$celltype==celltype[i]]
+    Idents(yaqun)="disease" 
+    mat<- as.data.frame(AverageExpression(yaqun)[[1]])## 取均值
+    namesc <- paste0(celltype[i],"亚群四组基因平均值.csv")
+    write.csv(mat,file=namesc)
+    print(i)
+
+  
+}
+```
+
+
+
+## 06 神经元拟时间分析
+
+
+```{r,fig.height=3,fig.width=6,result=F,eval=T}
+## 
+source("monocle2function.R")
+monocle2cds <- mymonocle2(subcluster) #monocle2function.R
+## test
+#monocle2cds <-mymonocle2(scRNA.Osteoclastic)
+ 
+p1 <- plot_cell_trajectory(monocle2cds, color_by = "celltype")
+#p2 <- plot_cell_trajectory(monocle2cds, color_by = "State")
+p3 <- plot_cell_trajectory(monocle2cds, color_by = "Pseudotime")
+print(p1|p3)
+  
+  
+
+```
+
+```{r,eval=F}
+source("D:/new desktop/牙周炎项目/03拟时间分析/monocle3functionV1.R")
+source("function_subcluster.R")
+detach("package:monocle")
+
+newcds <- my_monocle3(subcluster)
+
+plot_cells(newcds, reduction_method="UMAP", color_cells_by="celltype") + ggtitle('cds.umap')
+##从seurat导入整合过的umap坐标
+saveRDS(newcds,file = "subcluster_monocle3.rds")
+
+
+cds <- integ_UMAP(newcds,subcluster)
+#cds <- order_cells(cds) #选择root细胞
+plot_cells(cds, reduction_method="UMAP", color_cells_by="pseudotime") + ggtitle('cds.umap')
+saveRDS(cds,file = "subcluster_monocle3_矫正坐标和root后.rds")
+
+```
+
+```{r,eval=F}
+
+newcds <- readRDS("subcluster_monocle3.rds")
+p1 <-plot_cells(newcds,
+           color_cells_by = "pseudotime",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,
+           graph_label_size=1.5,
+           group_label_size=4,cell_size=1.5)
+
+#p1 <- plot_cells(newcds, color_cells_by="disease")
+p2 <- plot_cells(newcds, color_cells_by="orig.ident",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)
+p3 <- plot_cells(newcds, color_cells_by="celltype",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)
+p4 <- plot_cells(newcds, color_cells_by="disease",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)
+
+print((p1|p2)/(p3|p4))
+p1
+p2
+p3
+p4
+
+```
+
+### 6-1  Microglia cell细胞轨迹整体图谱（矫正坐标后）
+
+```{r,eval=TRUE}
+source("monocle3function.R")
+source("function_subcluster.R")
+cds <- readRDS("subcluster_monocle3_矫正坐标和root后.rds")
+
+p1 <-plot_cells(cds,
+           color_cells_by = "pseudotime",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,
+           graph_label_size=1.5,
+           group_label_size=4,cell_size=1.5)+ ggtitle('int.umap')
+
+#p1 <- plot_cells(newcds, color_cells_by="disease")
+p2 <- plot_cells(cds, color_cells_by="orig.ident",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)+ ggtitle('int.umap')
+p3 <- plot_cells(cds, color_cells_by="celltype",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)+ ggtitle('int.umap')
+p4 <- plot_cells(cds, color_cells_by="disease",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,)+ ggtitle('int.umap')
+
+#print((p1|p2)/(p3|p4))
+p1
+p2
+p3
+p4
+
+```
+
+
+```{r}
+#graph_test分析最重要的结果是莫兰指数（morans_I），其值在-1至1之间，0代表此基因没有
+#空间共表达效应，1代表此基因在空间距离相近的细胞中表达值高度相似。
+Track_genes <- graph_test(cds, neighbor_graph="principal_graph", cores=10)
+#挑选top10画图展示
+Track_genes_sig <- Track_genes %>% top_n(n=10, morans_I) %>%
+                   pull(gene_short_name) %>% as.character()
+write.csv(Track_genes_sig,file = "神经元时序分析画图markergene.csv")
+```
+
+### 6-1  神经元细胞轨迹关键基因展示体（矫正坐标后）
+
+```{r,eval=TRUE}
+Track_genes_sig <- read.csv("神经元时序分析画图markergene.csv")
+Track_genes_sig <- Track_genes_sig$x
+#基因表达趋势图
+
+
+try(plot_genes_in_pseudotime(cds[Track_genes_sig,], color_cells_by="pseudotime", min_expr=0.5, ncol = 2))
+
+
+
+#FeaturePlot图
+plot_cells(cds, genes=Track_genes_sig, show_trajectory_graph=FALSE,
+               label_cell_groups=FALSE,  label_leaves=FALSE)
+```
+
+
+# figure 转录因子分析
+
+```{r}
+scRNAraw <- readRDS( "D:\\new desktop\\牙周炎项目\\00数据处理\\原始Seurat结果未处理.rds")
+write.csv(t(as.matrix(scRNAraw@assays$RNA@counts)),file = "allmousebrain.csv")
+
+
+```
+
+
+
+```{r,eval=T}
+library(SCENIC)
+#packageVersion("SCENIC")  
+library(SCopeLoomR) #路径不能有中文
+scenicLoomPath='D:\\new desktop\\run\\sample_SCENIC.loom'
+
+
+loom <- open_loom(scenicLoomPath)
+# Read information from loom file: 
+regulons_incidMat <- get_regulons(loom, column.attr.name="Regulons")
+regulons <- regulonsToGeneLists(regulons_incidMat)
+regulonAUC <- get_regulons_AUC(loom, column.attr.name="RegulonsAUC")
+regulonAUC <- regulonAUC[onlyNonDuplicatedExtended(rownames(regulonAUC)),] #删除重复
+library(pheatmap) 
+n=t(scale(t( getAUC(regulonAUC[,] )))) # 'scale'可以对log-ratio数值进行归一化
+n[n>2]=2 
+n[n< -2]= -2
+n[1:4,1:4]
+dim(n) 
+
+meta <- scRNA@meta.data
+
+
+nn <- getAUC(regulonAUC[,] )
+```
+
+
+## 01整体热图
+```{r,fig.height=22,fig.width=6,eval=TRUE,results='asis'}
+heatdata <- getAUC(regulonAUC[,])
+subsc <- subset(scRNA,cell=colnames(heatdata))
+subscmeta <- subsc@meta.data
+annotation_col <- data.frame(subscmeta$disease,subscmeta$celltype)
+rownames(annotation_col) <- colnames(heatdata)
+#cellInfo <- data.frame(rownames(subscmeta),subscmeta$disease,subscmeta$celltype)
+regulonAUC <- regulonAUC[onlyNonDuplicatedExtended(rownames(regulonAUC)),] #删除重复
+regulonActivity_byCellType <- sapply(split(rownames(annotation_col), annotation_col$subscmeta.celltype),
+                                     function(cells) rowMeans(getAUC(regulonAUC)[,cells])) #分组求均值
+regulonActivity_byCellType_Scaled <- t(scale(t(regulonActivity_byCellType), center = T, scale=T))
+ComplexHeatmap::Heatmap(regulonActivity_byCellType_Scaled, name="Regulon activity")
+
+annotation_col <- as.data.frame(colnames(regulonActivity_byCellType_Scaled))
+rownames(annotation_col) <- colnames(regulonActivity_byCellType_Scaled)
+names(annotation_col) <- c("celltype")
+
+    
+ print(knitr::kable(regulonActivity_byCellType_Scaled,caption = "不同类型细胞的整体转录因子热图数据"))
+ cat("\n")
+
+
+
+pheatmap(regulonActivity_byCellType_Scaled, #热图的数据
+         cluster_rows = F,#行聚类
+         cluster_cols = F,#列聚类，可以看出样本之间的区分度
+         annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = F,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100),
+         main = "不同类型细胞的整体转录因子热图"
+         )
+
+```
+
+
+
+
+## 02同一组，不同细胞类型结果
+
+```{r,fig.height=22,fig.width=6,eval=TRUE,results='asis'}
+alldisease <- unique(scRNA$disease)
+
+for(i in 1:length(alldisease)){
+
+submeta <- meta %>% dplyr::select(celltype,disease) %>% dplyr::filter(disease==alldisease[i])
+subn <- n[,intersect(rownames(submeta),colnames(n))]
+submeta <- submeta[intersect(rownames(submeta),colnames(n)),]
+
+
+
+ regulonActivity_byCellType<- sapply(split(rownames(submeta), submeta$celltype),
+                                     function(cells) rowMeans(subn[,cells])) #分组求均值
+#print(regulonActivity_byCellType[1:4,1:4])
+
+  
+annotation_col <- as.data.frame(colnames(regulonActivity_byCellType))
+rownames(annotation_col) <- colnames(regulonActivity_byCellType)
+names(annotation_col) <- c("celltype")
+
+ print(knitr::kable(regulonActivity_byCellType,caption = alldisease[i]))
+ cat("\n")
+
+
+pheatmap(regulonActivity_byCellType, #热图的数据
+         cluster_rows = F,#行聚类
+         cluster_cols = F,#列聚类，可以看出样本之间的区分度
+         annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = F,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100),
+         main = alldisease[i]
+         )
+
+}
+
+
+```
+
+
+
+
+## 03 同一细胞类型，不同组结果
+
+```{r,fig.height=22,fig.width=6,eval=TRUE,results='asis'}
+
+allcelltypes <- unique(scRNA$celltype)
+
+for(i in 1:length(allcelltypes)){
+
+submeta <- meta %>% dplyr::select(celltype,disease) %>% dplyr::filter(celltype==allcelltypes[i])
+subn <- n[,intersect(rownames(submeta),colnames(n))]
+submeta <- submeta[intersect(rownames(submeta),colnames(n)),]
+
+
+
+ regulonActivity_byCellType<- sapply(split(rownames(submeta), submeta$disease),
+                                     function(cells) rowMeans(subn[,cells])) #分组求均值
+#print(regulonActivity_byCellType[1:4,1:4])
+
+  
+annotation_col <- as.data.frame(colnames(regulonActivity_byCellType))
+rownames(annotation_col) <- colnames(regulonActivity_byCellType)
+names(annotation_col) <- c("disease")
+
+
+ print(knitr::kable(regulonActivity_byCellType,caption =  allcelltypes[i]))
+ cat("\n")
+ 
+pheatmap(regulonActivity_byCellType, #热图的数据
+         cluster_rows = F,#行聚类
+         cluster_cols = F,#列聚类，可以看出样本之间的区分度
+         annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = F,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100),
+         main = allcelltypes[i]
+         )
+
+}
+
+
+
+```
+
+
+
+
+# Supplementary
+
+## 差异基因Table
+
+
+
+```{r,eval=T}
+### 画热图函数
+my_avarage_heatmap <- function(subcluster,gene_features,figname){
+library(pheatmap)
+mat<- as.data.frame(AverageExpression(subcluster,group.by = "disease")$RNA)## 取均值
+mat <- log2(mat + 1)
+heatdata <- mat[gene_features,]
+heatdata<-na.omit(heatdata)
+
+annotation_col <- as.data.frame(colnames(heatdata))
+rownames(annotation_col) <- colnames(heatdata)
+
+#如果注释出界，可以通过调整格子比例和字体修正
+heat <- pheatmap(heatdata, #热图的数据
+         cluster_rows = F,#行聚类
+         cluster_cols = F,#列聚类，可以看出样本之间的区分度
+         annotation_col =annotation_col, #标注样本分类
+         annotation_legend=TRUE, # 显示注释
+         show_rownames = T,# 显示行名
+         show_colnames = F,# 显示列名
+         scale = "row", #以行来标准化，这个功能很不错
+         color =colorRampPalette(c("blue", "white","red"))(100),
+         main = figname
+         )
+  
+print(heat)
+
+  return(heat)
+
+}
+
+
+
+```
+
+
+```{r,fig.height=5,fig.width=9,results='asis',eval=TRUE}
+ls <- readRDS("全部差异基因.rds")
+#scRNA <- readRDS("D:\\new desktop\\牙周炎项目\\rawdata\\手动注释后scRNA0723.rds")
+#cellnameall <- unique(as.character(scRNA$celltype))
+group<- c("markerslist_AD_ADP","markerslist_P_WT","markerslist_AD_WT","markerslist_cross_AD_ADP_and_P_WT")
+cellnameall <- c("Neurons","Astrocyte", "Oligodendrocyte", "Microglial cell", "Oligodendrocyte precursor cell ","Mural cell" )
+  
+
+
+for(i in 1:length(ls)){
+
+  alllist <- list()
+  #goandkegglist <- list()
+  
+  subls <- ls[[i]]
+ 
+  for(j in 1:length(subls)){
+     tablename <- paste0(cellnameall[j],"分组下的",group[i])
+  
+    df <- ls[[i]][[j]]
+    
+ print(knitr::kable(df,caption = tablename))
+ cat("\n")
+
+ #goandkegglist <- try(goandkegg(rownames(df),tablename))
+ subcluster <- subset(scRNA,celltype==cellnameall[j])
+ gene_features <- rownames(df)
+ heat <- try(my_avarage_heatmap(subcluster,gene_features,tablename))
+ 
+ 
+ 
+ 
+ 
+  }
+  
+  #alllist <- list(goandkegglist,ls)
+  
+}
+ 
+
+```
+
+
+## 富集分析
+
+
+
+## 差异基因Table
+
+富集分析
+
+```{r,fig.height=4,fig.width=6,eval=T}
+goandkegg <- function(gene,figname){
+
+  resultlist <- list()
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(stringr)
+library(ggplot2)
+library(enrichplot)
+library(DOSE)
+
+##自定义
+library(msigdbr)
+m_df<- msigdbr(species = "Mus musculus",  category = "C2", subcategory = "KEGG")
+
+resultlist[[2]]  <- enricher(gene, TERM2GENE =m_df[,c(3,4)])
+
+
+gene=bitr(gene,fromType="SYMBOL",toType="ENTREZID",OrgDb="org.Mm.eg.db") #会有部分基因数据丢失，或者ENSEMBL
+gene <- dplyr::distinct(gene,SYMBOL,.keep_all=TRUE)
+
+
+##go\
+resultlist[[1]]<- enrichGO(gene = gene$ENTREZID, OrgDb = org.Mm.eg.db,ont = "ALL", pvalueCutoff  = 0.5, qvalueCutoff  = 0.01,readable=T)  
+
+
+
+
+
+for(i in 1:2){
+  print(i)
+  p <- enrichplot::dotplot(resultlist[[i]], showCategory=10,orderBy = "x")
+  p <- p+ggtitle(figname)
+  print(p)
+
+}
+
+  return(resultlist)
+}
+
+
+
+```
+
+
+
+
+
+
+
+```{r,fig.height=5,fig.width=9,results='asis',eval=TRUE}
+ls <- readRDS("全部差异基因.rds")
+#scRNA <- readRDS("D:\\new desktop\\牙周炎项目\\rawdata\\手动注释后scRNA0723.rds")
+#cellnameall <- unique(as.character(scRNA$celltype))
+group<- c("markerslist_AD_ADP","markerslist_P_WT","markerslist_AD_WT","markerslist_cross_AD_ADP_and_P_WT")
+cellnameall <- c("Neurons","Astrocyte", "Oligodendrocyte", "Microglial cell", "Oligodendrocyte precursor cell ","Mural cell" )
+  
+ 
+
+for(i in 1:length(ls)){
+
+  alllist <- list()
+  #goandkegglist <- list()
+  
+  subls <- ls[[i]]
+ 
+  for(j in 1:length(subls)){
+     tablename <- paste0(cellnameall[j],"分组下的",group[i])
+  
+    df <- ls[[i]][[j]]
+    
+ print(knitr::kable(df,caption = tablename))
+ cat("\n")
+
+ goandkegglist <- try(goandkegg(rownames(df),tablename))
+ #subcluster <- subset(scRNA,celltype==cellnameall[j])
+ #gene_features <- rownames(df)
+ #heat <- try(my_avarage_heatmap(subcluster,gene_features,tablename))
+ 
+ 
+ 
+ 
+ 
+  }
+  
+  #alllist <- list(goandkegglist,ls)
+  
+}
+```
+
+
+```{r}
+PYCARD
+NN <- as.data.frame(rownames(scRNA)) 
+VlnPlot(scRNA,features = c("Pycard"))
+Idents(Microgia)="subcelltype"
+VlnPlot(Microgia,features = c("Pycard"))
+```
+
